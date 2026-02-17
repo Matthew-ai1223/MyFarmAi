@@ -1,0 +1,233 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>AgriConnect - AI Farm Assistant</title>
+    <meta name="description" content="AI-powered farming assistant, marketplace, and veterinary consultation platform.">
+    <meta name="theme-color" content="#16a34a">
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- PWA Icons & Android Support -->
+    <link rel="icon" type="image/png" sizes="192x192" href="images/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="images/icon-512.png">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- iOS Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AgriConnect">
+    <link rel="apple-touch-icon" href="images/icon-192.png">
+    <link rel="apple-touch-startup-image" href="images/icon-512.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.77 10.3-8 10z"></path>
+                <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+            </svg>
+            AgriConnect
+        </div>
+        <nav class="desktop-nav">
+            <a href="#" onclick="showSection('home'); return false;">Home</a>
+            <a href="#" onclick="showSection('ai-chat'); return false;">Ask AI</a>
+            <a href="#" onclick="showSection('market'); return false;">Shop</a>
+            <a href="#" onclick="showSection('consult'); return false;">Consult Vets</a>
+        </nav>
+        <div class="user-actions">
+            <button class="btn btn-icon" id="profile-btn" onclick="showSection('auth')" aria-label="User Profile">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="app-content" class="container">
+
+        <!-- HOME SECTION -->
+        <section id="home" class="active-section">
+            <div class="hero-card card">
+                <h1>Cultivate Success</h1>
+                <p style="opacity: 0.95; margin-bottom: 1.5rem; font-size: 1.05rem;">Your AI-powered farming companion.
+                    Get expert advice, trade fresh produce, and connect with veterinary professionals.</p>
+                <button class="btn"
+                    style="background: white; color: var(--primary); font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
+                    onclick="showSection('ai-chat')">Ask AI Assistant</button>
+            </div>
+
+            <h3 class="mb-1 mt-4">Marketplace Trending</h3>
+            <div class="product-grid" id="home-products">
+                <!-- Products injected by JS -->
+                <div class="card skeleton" style="height: 200px;"></div>
+                <div class="card skeleton" style="height: 200px;"></div>
+            </div>
+
+            <h3 class="mb-1 mt-4">Top Consultants</h3>
+            <div class="vet-list" id="home-vets">
+                <div class="card skeleton" style="height: 80px;"></div>
+            </div>
+        </section>
+
+        <!-- AI CHAT SECTION -->
+        <section id="ai-chat" class="d-none">
+            <div class="chat-container" id="chat-messages">
+                <div class="message ai">
+                    Hello! I'm your AI Farm Assistant. Ask me anything about crops, livestock, or weather patterns!
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="input-field" id="chat-input" placeholder="Ask about crops, weather, prices..."
+                    aria-label="Chat message">
+                <button class="btn btn-primary btn-icon" id="chat-send" aria-label="Send message">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        aria-hidden="true">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- MARKET SECTION -->
+        <section id="market" class="d-none">
+            <div class="header-actions"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>Marketplace</h2>
+                <button class="btn btn-primary" onclick="openModal('sell-modal')">+ Sell</button>
+            </div>
+            <div class="form-group mb-2">
+                <input type="search" class="input-field" placeholder="Search crops, seeds, tools..."
+                    aria-label="Search products">
+            </div>
+            <div class="product-grid" id="market-list">
+                <!-- Market items injected JS -->
+            </div>
+        </section>
+
+        <!-- CONSULT SECTION -->
+        <section id="consult" class="d-none">
+            <h2>Expert Consultation</h2>
+            <p class="text-muted mb-2">Connect with certified veterinarians and agronomists for professional advice.</p>
+            <div id="consult-list">
+                <!-- Vets injected by JS -->
+            </div>
+        </section>
+
+        <!-- AUTH SECTION -->
+        <section id="auth" class="d-none">
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 1.5rem;">Welcome Back</h2>
+
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; justify-content: center; flex-wrap: wrap;"
+                    id="role-selector">
+                    <button type="button" class="btn btn-outline text-xs active" data-role="farmer"
+                        onclick="selectRole(this)">Farmer</button>
+                    <button type="button" class="btn btn-outline text-xs" data-role="consumer"
+                        onclick="selectRole(this)">Consumer</button>
+                    <button type="button" class="btn btn-outline text-xs" data-role="vet"
+                        onclick="selectRole(this)">Vet</button>
+                </div>
+
+                <form onsubmit="event.preventDefault(); showSection('home');">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" class="input-field" placeholder="user@example.com" required
+                            autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" class="input-field" placeholder="••••••••" required
+                            autocomplete="current-password" minlength="6">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Log In</button>
+                    <p class="text-center text-sm mt-4">Don't have an account? <a href="#"
+                            class="text-primary font-bold">Sign up</a></p>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal for Selling -->
+    <div id="sell-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3 class="mb-2">Sell Your Produce</h3>
+            <form id="sell-form" onsubmit="handleSellSubmit(event)">
+                <div class="form-group">
+                    <label for="sell-name">Product Name</label>
+                    <input type="text" id="sell-name" class="input-field" required placeholder="e.g. Fresh Tomatoes"
+                        maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label for="sell-price">Price (₦)</label>
+                    <input type="number" id="sell-price" class="input-field" required placeholder="5000" min="0"
+                        step="100">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('sell-modal')"
+                        style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" onclick="showSection('home'); return false;" id="nav-home">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            Home
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('ai-chat'); return false;" id="nav-chat">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            Ask AI
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('market'); return false;" id="nav-market">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            Shop
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('consult'); return false;" id="nav-consult">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Vets
+        </a>
+    </nav>
+
+    <script src="js/app.js"></script>
+</body>
+
+</html>
