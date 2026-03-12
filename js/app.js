@@ -19,9 +19,7 @@ const state = {
 };
 
 // DOM Elements
-const chatInput = document.getElementById('chat-input');
-const chatSendBtn = document.getElementById('chat-send');
-const chatMessages = document.getElementById('chat-messages');
+// No additional global DOM elements needed for iframes
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
@@ -32,41 +30,33 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         populateMarketplace();
         populateVets();
-    }, 1500); // 1.5s delay to show skeleton loader
-
-    // Event Listeners
-    chatSendBtn.addEventListener('click', handleChatSend);
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleChatSend();
-    });
+    }, 1500);
 
     // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('Service Worker Registered', reg))
-            .catch(err => console.log('Service Worker Failed', err));
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker Registered'))
+                .catch(err => console.log('Service Worker Failed', err));
+        });
     }
 });
 
 // Navigation Logic
 window.showSection = function (sectionId) {
-    // Update State
     state.currentSection = sectionId;
 
-    // Hide all sections
     document.querySelectorAll('main > section').forEach(sec => {
         sec.classList.add('d-none');
-        sec.classList.remove('active-section'); // Custom class for animations if needed
+        sec.classList.remove('active-section');
     });
 
-    // Show target section
     const target = document.getElementById(sectionId);
     if (target) {
         target.classList.remove('d-none');
         target.classList.add('active-section');
     }
 
-    // Update Nav Active States (Both mobile and desktop)
     const navMapping = {
         'home': 'Home',
         'ai-chat': 'Ask AI',
@@ -105,13 +95,9 @@ window.showSection = function (sectionId) {
 // Data Population
 function populateMarketplace() {
     const containers = [document.getElementById('home-products'), document.getElementById('market-list')];
-
     containers.forEach(container => {
         if (!container) return;
-
-        // Clear skeletons
         container.innerHTML = '';
-
         state.products.forEach(product => {
             const card = document.createElement('div');
             card.className = 'product-card';
@@ -129,93 +115,27 @@ function populateMarketplace() {
 }
 
 function populateVets() {
-    const containers = [document.getElementById('home-vets'), document.getElementById('consult-list')];
+    const container = document.getElementById('home-vets');
+    if (!container) return;
+    container.innerHTML = '';
 
-    containers.forEach(container => {
-        if (!container) return;
-
-        // Clear skeletons
-        container.innerHTML = '';
-
-        state.vets.forEach(vet => {
-            const card = document.createElement('div');
-            card.className = 'card vet-card';
-            card.style.marginBottom = '0.75rem';
-            card.innerHTML = `
-                <div class="vet-avatar flex-center" style="overflow: hidden;">
-                    <img src="${vet.img || 'https://via.placeholder.com/60'}" alt="${vet.name}" style="width: 100%; height: 100%; object-fit: cover;">
-                </div>
-                <div style="flex: 1;">
-                    <h4 style="margin: 0; font-size: 1rem;">${vet.name}</h4>
-                    <p class="text-xs text-muted" style="margin: 0;">${vet.specialization}</p>
-                    <div class="text-xs text-primary">★ ${vet.rating} / 5.0</div>
-                </div>
-                <button class="btn btn-outline text-xs">Consult</button>
-            `;
-            container.appendChild(card);
-        });
+    state.vets.forEach(vet => {
+        const card = document.createElement('div');
+        card.className = 'card vet-card';
+        card.style.marginBottom = '0.75rem';
+        card.innerHTML = `
+            <div class="vet-avatar flex-center" style="overflow: hidden;">
+                <img src="${vet.img || 'https://via.placeholder.com/60'}" alt="${vet.name}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div style="flex: 1;">
+                <h4 style="margin: 0; font-size: 1rem;">${vet.name}</h4>
+                <p class="text-xs text-muted" style="margin: 0;">${vet.specialization}</p>
+                <div class="text-xs text-primary">★ ${vet.rating} / 5.0</div>
+            </div>
+            <button class="btn btn-outline text-xs" onclick="showSection('consult')">Consult</button>
+        `;
+        container.appendChild(card);
     });
-}
-
-// Chat Functionality
-function handleChatSend() {
-    const text = chatInput.value.trim();
-    if (!text) return;
-
-    // Add User Message
-    addMessage(text, 'user');
-    chatInput.value = '';
-
-    // Scroll to bottom
-    // window.scrollTo(0, document.body.scrollHeight);
-
-    // Simulate AI Latency
-    const loadingId = addLoadingMessage();
-
-    setTimeout(() => {
-        removeMessage(loadingId);
-        const aiResponse = generateAIResponse(text);
-        addMessage(aiResponse, 'ai');
-    }, 1500);
-}
-
-function addMessage(text, type) {
-    const div = document.createElement('div');
-    div.className = `message ${type}`;
-    div.innerText = text;
-    chatMessages.appendChild(div);
-    // Scroll into view
-    div.scrollIntoView({ behavior: 'smooth' });
-    return div;
-}
-
-function addLoadingMessage() {
-    const id = 'loading-' + Date.now();
-    const div = document.createElement('div');
-    div.id = id;
-    div.className = 'message ai';
-    div.innerHTML = '<span style="animation: pulse 1s infinite;">Thinking...</span>';
-    chatMessages.appendChild(div);
-    div.scrollIntoView({ behavior: 'smooth' });
-    return id;
-}
-
-function removeMessage(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
-}
-
-function generateAIResponse(query) {
-    const q = query.toLowerCase();
-    if (q.includes('weather')) return "The weather outlook for the next 3 days is sunny with simulated rainfall on Thursday evening. Ideal for planting maize.";
-    if (q.includes('price') || q.includes('cost')) return "Market prices for cassava have risen by 5% this week due to high demand in the south.";
-    if (q.includes('sick') || q.includes('disease')) return "I'm sorry to hear that. Could you describe the symptoms? If it's urgent, please consult Dr. Amina Bello from the Vets section.";
-    if (q.includes('fertilizer')) return "For yam, NPK 15-15-15 is generally recommended applied 4 weeks after planting.";
-    return "That's an interesting farming question! Unfortunately, as a demo AI, I have limited knowledge. Try asking about weather, prices, or fertilizer.";
-}
-
-function getInitials(name) {
-    return name.split(' ').map(n => n[0]).join('');
 }
 
 // Modal Functions

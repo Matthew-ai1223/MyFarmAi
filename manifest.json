@@ -1,7 +1,9 @@
 {
   "name": "AgriConnect Farm Assistant",
   "short_name": "AgriConnect",
+  "id": "/",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",

@@ -26,3 +26,7 @@ A Progressive Web App (PWA) for farmers to:
 - `js/app.js`: Application logic and mock data.
 - `sw.js`: Service Worker for offline caching.
 - `manifest.json`: PWA configuration.
+
+
+'http://localhost:3000/api'
+    : 'https://farm-ai-iota.vercel.app/api';

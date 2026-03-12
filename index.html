@@ -64,51 +64,33 @@
         <section id="home" class="active-section">
             <div class="hero-card card">
                 <h1>Cultivate Success</h1>
-                <p style="opacity: 0.95; margin-bottom: 1.5rem; font-size: 1.05rem;">Your AI-powered farming companion.
+                <p class="hero-text">Your AI-powered farming companion.
                     Get expert advice, trade fresh produce, and connect with veterinary professionals.</p>
-                <button class="btn"
-                    style="background: white; color: var(--primary); font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
-                    onclick="showSection('ai-chat')">Ask AI Assistant</button>
+                <button class="btn hero-btn" onclick="showSection('ai-chat')">Ask AI Assistant</button>
             </div>
 
             <h3 class="mb-1 mt-4">Marketplace Trending</h3>
             <div class="product-grid" id="home-products">
                 <!-- Products injected by JS -->
-                <div class="card skeleton" style="height: 200px;"></div>
-                <div class="card skeleton" style="height: 200px;"></div>
+                <div class="card skeleton h-200"></div>
+                <div class="card skeleton h-200"></div>
             </div>
 
             <h3 class="mb-1 mt-4">Top Consultants</h3>
             <div class="vet-list" id="home-vets">
-                <div class="card skeleton" style="height: 80px;"></div>
+                <div class="card skeleton h-80"></div>
             </div>
         </section>
 
         <!-- AI CHAT SECTION -->
-        <section id="ai-chat" class="d-none">
-            <div class="chat-container" id="chat-messages">
-                <div class="message ai">
-                    Hello! I'm your AI Farm Assistant. Ask me anything about crops, livestock, or weather patterns!
-                </div>
-            </div>
-            <div class="chat-input-area">
-                <input type="text" class="input-field" id="chat-input" placeholder="Ask about crops, weather, prices..."
-                    aria-label="Chat message">
-                <button class="btn btn-primary btn-icon" id="chat-send" aria-label="Send message">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        aria-hidden="true">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                </button>
-            </div>
+        <section id="ai-chat" class="d-none full-height-section">
+            <iframe src="https://my-farm-ai.vercel.app/" class="app-iframe" title="AgriConnect AI Assistant"
+                allow="microphone"></iframe>
         </section>
 
         <!-- MARKET SECTION -->
         <section id="market" class="d-none">
-            <div class="header-actions"
-                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div class="section-header">
                 <h2>Marketplace</h2>
                 <button class="btn btn-primary" onclick="openModal('sell-modal')">+ Sell</button>
             </div>
@@ -122,21 +104,16 @@
         </section>
 
         <!-- CONSULT SECTION -->
-        <section id="consult" class="d-none">
-            <h2>Expert Consultation</h2>
-            <p class="text-muted mb-2">Connect with certified veterinarians and agronomists for professional advice.</p>
-            <div id="consult-list">
-                <!-- Vets injected by JS -->
-            </div>
+        <section id="consult" class="d-none full-height-section">
+            <iframe src="https://agriconnect.gt.tc/" class="app-iframe" title="Veterinary Consultation"></iframe>
         </section>
 
         <!-- AUTH SECTION -->
         <section id="auth" class="d-none">
             <div class="card">
-                <h2 style="text-align: center; margin-bottom: 1.5rem;">Welcome Back</h2>
+                <h2 class="auth-header">Welcome Back</h2>
 
-                <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; justify-content: center; flex-wrap: wrap;"
-                    id="role-selector">
+                <div class="role-selector" id="role-selector">
                     <button type="button" class="btn btn-outline text-xs active" data-role="farmer"
                         onclick="selectRole(this)">Farmer</button>
                     <button type="button" class="btn btn-outline text-xs" data-role="consumer"
@@ -180,10 +157,10 @@
                     <input type="number" id="sell-price" class="input-field" required placeholder="5000" min="0"
                         step="100">
                 </div>
-                <div style="display: flex; gap: 1rem;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('sell-modal')"
-                        style="flex: 1;">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">Post</button>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline flex-1"
+                        onclick="closeModal('sell-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary flex-1">Post</button>
                 </div>
             </form>
         </div>
