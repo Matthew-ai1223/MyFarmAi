@@ -43,7 +43,7 @@
             <a href="#" onclick="showSection('home'); return false;">Home</a>
             <a href="#" onclick="showSection('ai-chat'); return false;">Ask AI</a>
             <a href="#" onclick="showSection('market'); return false;">Shop</a>
-            <a href="#" onclick="window.open('http://agriconnect.gt.tc/', '_blank'); return false;">Consult Vets</a>
+            <a href="#" onclick="showSection('consult'); return false;">Consult Vets</a>
         </nav>
         <div class="user-actions">
             <button class="btn btn-icon" id="profile-btn" onclick="showSection('auth')" aria-label="User Profile">
@@ -101,6 +101,11 @@
             <div class="product-grid" id="market-list">
                 <!-- Market items injected JS -->
             </div>
+        </section>
+
+        <!-- CONSULT SECTION -->
+        <section id="consult" class="d-none full-height-section">
+            <iframe src="https://agriconnect.gt.tc/" class="app-iframe" title="Veterinary Consultation"></iframe>
         </section>
 
         <!-- AUTH SECTION -->
@@ -164,12 +169,15 @@
     <!-- PWA Install Popup -->
     <div id="install-popup" class="modal-backdrop">
         <div class="modal-content" style="text-align: center; max-width: 350px;">
-            <img src="images/icon-192.png" alt="App Icon" style="width: 72px; height: 72px; border-radius: 16px; margin-bottom: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <img src="images/icon-192.png" alt="App Icon"
+                style="width: 72px; height: 72px; border-radius: 16px; margin-bottom: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
             <h3 style="margin-bottom: 0.5rem;">Install AgriConnect</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;">Install our app on your device for quick access, offline support, and a better experience.</p>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;">Install our app on your
+                device for quick access, offline support, and a better experience.</p>
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                 <button id="install-btn" class="btn btn-primary" style="width: 100%;">Install App</button>
-                <button class="btn btn-outline" style="width: 100%; border: none;" onclick="dismissInstall()">Not Now</button>
+                <button class="btn btn-outline" style="width: 100%; border: none;" onclick="dismissInstall()">Not
+                    Now</button>
             </div>
         </div>
     </div>
@@ -200,7 +208,7 @@
             </svg>
             Shop
         </a>
-        <a href="#" class="nav-item" onclick="window.open('http://agriconnect.gt.tc/', '_blank'); return false;" id="nav-consult">
+        <a href="#" class="nav-item" onclick="showSection('consult'); return false;" id="nav-consult">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
