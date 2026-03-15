@@ -221,3 +221,48 @@ window.selectRole = function (button) {
     console.log('Selected role:', role);
     // You can store this for backend submission
 };
+
+// PWA Install Prompt Logic
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    deferredPrompt = e;
+    
+    // Show the popup automatically after 2 seconds if not previously dismissed
+    if (!localStorage.getItem('installDismissed')) {
+        setTimeout(() => {
+            openModal('install-popup');
+        }, 2000);
+    }
+});
+
+// Handle Install Button Click
+document.addEventListener('DOMContentLoaded', () => {
+    const installBtn = document.getElementById('install-btn');
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            // Hide the application provided install prompt
+            closeModal('install-popup');
+            
+            if (deferredPrompt) {
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                // We've used the prompt, and can't use it again, throw it away
+                deferredPrompt = null;
+            }
+        });
+    }
+});
+
+// Handle Dismissal
+window.dismissInstall = function() {
+    closeModal('install-popup');
+    // Save dismissal state so we don't nag them repeatedly
+    localStorage.setItem('installDismissed', 'true');
+};
