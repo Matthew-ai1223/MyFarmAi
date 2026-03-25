@@ -7,12 +7,11 @@ const state = {
     cart: []
 };
 
-// API Configuration
-// const API_BASE = window.location.origin.includes('localhost') 
-//     ? 'http://localhost:3000/api' 
-//     : 'https://farm-ai-iota.vercel.app/api'; 
-
-const API_BASE = 'https://farm-ai-iota.vercel.app/api';
+// API: use local backend on localhost (for Cloudinary upload + API during dev)
+const API_BASE =
+    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000/api'
+        : 'https://farm-ai-iota.vercel.app/api';
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
@@ -35,6 +34,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const marketCategory = document.getElementById('market-category');
     if (marketSearch) marketSearch.addEventListener('input', applyMarketFilter);
     if (marketCategory) marketCategory.addEventListener('change', applyMarketFilter);
+
+    const sellImageFile = document.getElementById('sell-image-file');
+    if (sellImageFile) {
+        sellImageFile.addEventListener('change', async (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            await uploadSellImageToCloudinary(file);
+        });
+    }
+    const sellImageRemove = document.getElementById('sell-image-remove');
+    if (sellImageRemove) {
+        sellImageRemove.addEventListener('click', () => resetSellImageUI());
+    }
 
     scheduleInstallPopup();
     const installBtn = document.getElementById('install-btn');
@@ -334,12 +346,65 @@ window.closeModal = function (modalId) {
     if (modal) modal.classList.remove('open');
 };
 
+function resetSellImageUI() {
+    const hidden = document.getElementById('sell-image');
+    const file = document.getElementById('sell-image-file');
+    const fallback = document.getElementById('sell-image-url-fallback');
+    const wrap = document.getElementById('sell-image-preview-wrap');
+    const prev = document.getElementById('sell-image-preview');
+    const status = document.getElementById('sell-upload-status');
+    if (hidden) hidden.value = '';
+    if (file) file.value = '';
+    if (fallback) fallback.value = '';
+    if (status) status.textContent = '';
+    if (wrap) wrap.style.display = 'none';
+    if (prev) {
+        prev.removeAttribute('src');
+        prev.alt = '';
+    }
+}
+
+function showSellImagePreview(url) {
+    if (!url) return;
+    const hidden = document.getElementById('sell-image');
+    const wrap = document.getElementById('sell-image-preview-wrap');
+    const prev = document.getElementById('sell-image-preview');
+    if (hidden) hidden.value = url;
+    if (prev) {
+        prev.src = url;
+        prev.alt = 'Product preview';
+    }
+    if (wrap) wrap.style.display = 'block';
+}
+
+async function uploadSellImageToCloudinary(file) {
+    const status = document.getElementById('sell-upload-status');
+    if (status) status.textContent = 'Uploading…';
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch(`${API_BASE}/upload/cloudinary`, { method: 'POST', body: formData });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.status !== 'success' || !data.url) {
+        const err = data.error || data.message || `Upload failed (${res.status})`;
+        if (status) status.textContent = err;
+        showToast(err, 'error');
+        return null;
+    }
+    const fallback = document.getElementById('sell-image-url-fallback');
+    if (fallback) fallback.value = '';
+    showSellImagePreview(data.url);
+    if (status) status.textContent = 'Photo uploaded.';
+    showToast('Image uploaded', 'success');
+    return data.url;
+}
+
 window.openSellModal = function () {
     const idEl = document.getElementById('sell-product-id');
     const titleEl = document.getElementById('sell-modal-title');
     const btnEl = document.getElementById('sell-submit-btn');
     const form = document.getElementById('sell-form');
     if (form) form.reset();
+    resetSellImageUI();
     if (idEl) idEl.value = '';
     if (titleEl) titleEl.textContent = 'List a product';
     if (btnEl) btnEl.textContent = 'Post listing';
@@ -361,10 +426,21 @@ window.startEditProduct = function (product) {
     document.getElementById('sell-name').value = product.title || '';
     document.getElementById('sell-price').value = product.price != null ? String(product.price) : '';
     document.getElementById('sell-category').value = product.category || 'Produce';
-    document.getElementById('sell-image').value = product.image || '';
     document.getElementById('sell-phone').value = product.sellerPhone || '';
     const desc = document.getElementById('sell-description');
     if (desc) desc.value = product.description || '';
+    const file = document.getElementById('sell-image-file');
+    const fallback = document.getElementById('sell-image-url-fallback');
+    const status = document.getElementById('sell-upload-status');
+    if (file) file.value = '';
+    if (fallback) fallback.value = '';
+    if (status) status.textContent = '';
+    const imgUrl = product.image || '';
+    if (imgUrl) {
+        showSellImagePreview(imgUrl);
+    } else {
+        resetSellImageUI();
+    }
     openModal('sell-modal');
 };
 
@@ -407,7 +483,9 @@ window.handleSellSubmit = async function (e) {
     const title = document.getElementById('sell-name').value;
     const price = document.getElementById('sell-price').value;
     const category = document.getElementById('sell-category').value;
-    const image = document.getElementById('sell-image').value;
+    const hiddenImg = document.getElementById('sell-image')?.value?.trim() || '';
+    const fallbackImg = document.getElementById('sell-image-url-fallback')?.value?.trim() || '';
+    const image = hiddenImg || fallbackImg;
     const phone = document.getElementById('sell-phone').value;
     const description = document.getElementById('sell-description')?.value?.trim() || '';
 

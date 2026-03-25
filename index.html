@@ -353,9 +353,18 @@
                     <label for="sell-phone">Phone Number (WhatsApp)</label>
                     <input type="tel" id="sell-phone" class="input-field" placeholder="+234..." required>
                 </div>
-                <div class="form-group" style="margin-bottom: 2.5rem;">
-                    <label for="sell-image">Image URL (Optional)</label>
-                    <input type="url" id="sell-image" class="input-field" placeholder="https://images.unsplash.com/...">
+                <div class="form-group sell-image-group" style="margin-bottom: 1.25rem;">
+                    <label for="sell-image-file">Product photo</label>
+                    <input type="hidden" id="sell-image" value="">
+                    <input type="file" id="sell-image-file" class="input-field" accept="image/jpeg,image/png,image/webp,image/gif"
+                        autocomplete="off">
+                    <p id="sell-upload-status" class="sell-upload-hint" aria-live="polite"></p>
+                    <div id="sell-image-preview-wrap" class="sell-image-preview-wrap" style="display: none;">
+                        <img id="sell-image-preview" class="sell-image-preview" alt="Preview">
+                        <button type="button" class="btn btn-outline text-xs" id="sell-image-remove" style="margin-top: 0.5rem;">Remove photo</button>
+                    </div>
+                    <label for="sell-image-url-fallback" class="text-xs text-muted" style="display:block; margin-top:0.75rem;">Or paste image URL</label>
+                    <input type="url" id="sell-image-url-fallback" class="input-field" placeholder="https://…" autocomplete="off">
                 </div>
                 <div style="display: flex; gap: 1rem;">
                     <button type="button" class="btn btn-outline" style="flex: 1;"

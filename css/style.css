@@ -1006,3 +1006,24 @@ label {
     padding-top: 0.5rem;
     margin-top: 0.25rem;
 }
+
+/* Sell form — Cloudinary image */
+.sell-upload-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0.4rem 0 0 0;
+    min-height: 1.25em;
+}
+
+.sell-image-preview-wrap {
+    margin-top: 0.75rem;
+}
+
+.sell-image-preview {
+    display: block;
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-soft, rgba(0, 0, 0, 0.08));
+}
