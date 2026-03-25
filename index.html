@@ -57,6 +57,16 @@
             <a href="#" onclick="window.open('http://agriconnect.gt.tc/', '_blank'); return false;">Vet Connect</a>
         </nav>
         <div class="user-actions">
+            <!-- Cart Button -->
+            <button class="btn btn-icon" onclick="toggleCart()" aria-label="Shopping Cart">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="9" cy="21" r="1"></circle>
+                    <circle cx="20" cy="21" r="1"></circle>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                <span id="cart-count" class="badge">0</span>
+            </button>
             <button class="btn btn-icon" id="profile-btn" onclick="showSection('auth')" aria-label="User Profile">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -64,6 +74,10 @@
                     <circle cx="12" cy="7" r="4"></circle>
                 </svg>
             </button>
+            <div id="user-display" class="d-none" style="margin-left: 0.5rem; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span id="user-email-header"></span>
+                <button onclick="handleLogout()" style="color: #ef4444; border: none; background: none; cursor: pointer; font-size: 0.75rem;">Logout</button>
+            </div>
         </div>
     </header>
 
@@ -155,7 +169,7 @@
 
         <!-- AI CHAT SECTION -->
         <section id="ai-chat" class="d-none full-height-section">
-            <iframe src="https://my-farm-ai.vercel.app/" class="app-iframe" title="MyFarmAI Assistant"
+            <iframe id="ai-iframe" src="https://my-farm-ai.vercel.app/" class="app-iframe" title="MyFarmAI Assistant"
                 allow="microphone"></iframe>
         </section>
 
@@ -180,7 +194,7 @@
         <section id="auth" class="d-none" style="display: flex; justify-content: center; padding-top: 2rem;">
             <div
                 style="background: var(--bg-surface); padding: 3rem 2.5rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-hover); max-width: 440px; width: 100%; text-align: center;">
-                <h2 style="margin-bottom: 2rem;">Welcome Back</h2>
+                <h2 style="margin-bottom: 2rem;" id="auth-title">Welcome Back</h2>
 
                 <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem;"
                     id="role-selector">
@@ -192,7 +206,7 @@
                         onclick="selectRole(this)">Vet</button>
                 </div>
 
-                <form onsubmit="event.preventDefault(); showSection('home');" style="text-align: left;">
+                <form id="auth-form" onsubmit="handleAuthSubmit(event)" style="text-align: left;">
                     <div class="form-group">
                         <label for="login-email">Email Address</label>
                         <input type="email" id="login-email" class="input-field" placeholder="you@farm.com" required
@@ -203,14 +217,36 @@
                         <input type="password" id="login-password" class="input-field" placeholder="••••••••" required
                             autocomplete="current-password" minlength="6">
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1.25rem;">Secure
+                    <button type="submit" class="btn btn-primary" id="auth-submit-btn" style="width: 100%; padding: 1.25rem;">Secure
                         Login</button>
                     <p style="text-align: center; margin-top: 1.5rem; color: var(--text-muted);">
-                        New to MyFarmAI? <a href="#" style="color: var(--primary); font-weight: 700;">Create Account</a>
+                        <span id="auth-toggle-text">New to MyFarmAI?</span> 
+                        <a href="#" onclick="toggleAuthMode(); return false;" id="auth-toggle-link" style="color: var(--primary); font-weight: 700;">Create Account</a>
                     </p>
                 </form>
             </div>
         </section>
+
+        <!-- CART SECTION (Overlay Menu) -->
+        <div id="cart-panel" class="modal-backdrop">
+             <div class="modal-content" style="max-width: 500px; height: 100vh; position: fixed; right: 0; top: 0; margin: 0; border-radius: 0; display: flex; flex-direction: column;">
+                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                     <h3>Your Shopping Cart</h3>
+                     <button class="btn btn-icon" onclick="toggleCart()">&times;</button>
+                 </div>
+                 <div id="cart-items" style="flex: 1; overflow-y: auto;">
+                     <!-- Items injected by JS -->
+                     <p style="text-align: center; color: var(--text-muted); padding-top: 3rem;">Loading your cart...</p>
+                 </div>
+                 <div style="padding-top: 1.5rem; border-top: 1px solid var(--border-soft);">
+                     <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.25rem; margin-bottom: 1.5rem;">
+                         <span>Total</span>
+                         <span id="cart-total">₦0</span>
+                     </div>
+                     <button class="btn btn-primary" style="width: 100%; padding: 1.25rem;" onclick="handleCheckout()">Checkout Now</button>
+                 </div>
+             </div>
+        </div>
 
     </main>
 
@@ -224,10 +260,28 @@
                     <input type="text" id="sell-name" class="input-field" required placeholder="e.g. Organic Tomatoes"
                         maxlength="50">
                 </div>
-                <div class="form-group" style="margin-bottom: 2rem;">
+                <div class="form-group">
+                    <label for="sell-category">Category</label>
+                    <select id="sell-category" class="input-field" style="appearance: auto;">
+                        <option value="Seeds">Seeds & Seedlings</option>
+                        <option value="Tools">Tools & Machinery</option>
+                        <option value="Produce" selected>Fresh Produce</option>
+                        <option value="Livestock">Livestock</option>
+                        <option value="Fertilizer">Fertilizers & Agro-chem</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="sell-price">Price (₦)</label>
                     <input type="number" id="sell-price" class="input-field" required placeholder="5000" min="0"
                         step="100">
+                </div>
+                <div class="form-group">
+                    <label for="sell-phone">Phone Number (WhatsApp)</label>
+                    <input type="tel" id="sell-phone" class="input-field" placeholder="+234..." required>
+                </div>
+                <div class="form-group" style="margin-bottom: 2.5rem;">
+                    <label for="sell-image">Image URL (Optional)</label>
+                    <input type="url" id="sell-image" class="input-field" placeholder="https://images.unsplash.com/...">
                 </div>
                 <div style="display: flex; gap: 1rem;">
                     <button type="button" class="btn btn-outline" style="flex: 1;"
