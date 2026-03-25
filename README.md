@@ -1,4 +1,4 @@
-# AgriConnect - AI Farm Assistant
+# MyFarmAI - AI Farm Assistant
 
 A Progressive Web App (PWA) for farmers to:
 - Ask an AI assistant about crops and livestock.

@@ -1,5 +1,5 @@
 /**
- * AgriConnect PWA Main Logic
+ * MyFarmAI PWA Main Logic
  */
 
 // State

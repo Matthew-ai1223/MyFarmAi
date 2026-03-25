@@ -1,4 +1,4 @@
-const CACHE_NAME = 'agriconnect-v1.2-no-cache';
+const CACHE_NAME = 'myfarmai-v1.2-no-cache';
 
 // Install Event - skip waiting immediately
 self.addEventListener('install', (e) => {
