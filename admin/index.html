@@ -38,6 +38,23 @@
         .row { display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
         input, select { background:#0b1419; border:1px solid var(--line); color:var(--text); border-radius:10px; padding:8px 10px; }
         .warn { color:var(--warn); }
+        .actions { white-space:nowrap; }
+        .btn-sm { padding:6px 10px; font-size:12px; border-radius:8px; cursor:pointer; font-weight:600; border:0; }
+        .btn-edit { background:#1e3a2f; color:#9be7ca; border:1px solid #245143; }
+        .btn-edit:hover { border-color:var(--brand); }
+        .btn-del { background:#3f1515; color:#fecaca; border:1px solid #7f1d1d; margin-left:6px; }
+        .btn-del:hover { border-color:#f87171; }
+        .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:100; align-items:center; justify-content:center; padding:16px; }
+        .modal-overlay.open { display:flex; }
+        .modal-box { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; max-width:520px; width:100%; max-height:90vh; overflow:auto; }
+        .modal-box h3 { margin:0 0 14px 0; font-size:18px; }
+        .field { margin-bottom:12px; }
+        .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+        .field input, .field textarea, .field select { width:100%; }
+        .field textarea { min-height:72px; resize:vertical; }
+        .modal-actions { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+        .key-row { align-items:flex-end; }
+        .key-row input[type="password"] { flex:1; min-width:200px; }
         @media (max-width:1100px){ .grid4{grid-template-columns:repeat(2,minmax(0,1fr));} .main{grid-template-columns:1fr;} }
     </style>
 </head>
@@ -48,11 +65,16 @@
                 <div class="title">Vet Connect Admin Panel</div>
                 <div class="small">Monitor users, activities, chats, and products from one dashboard.</div>
             </div>
-            <div class="row">
+            <div class="row key-row">
                 <select id="api-select">
                     <option value="http://localhost:3000/api">Local API (http://localhost:3000/api)</option>
                     <option value="https://farm-ai-iota.vercel.app/api" selected>Production API (farm-ai-iota.vercel.app/api)</option>
                 </select>
+                <div class="field" style="margin:0; flex:1; min-width:200px;">
+                    <label for="admin-key">Admin API key (edit/delete products)</label>
+                    <input type="password" id="admin-key" placeholder="ADMIN_API_KEY from server env" autocomplete="off">
+                </div>
+                <button type="button" class="btn-outline" id="save-key-btn" title="Store key in this browser session only">Remember key</button>
                 <button class="btn" id="refresh-btn">Refresh Data</button>
                 <a class="btn-outline" href="http://agriconnect.gt.tc/admin.html" target="_blank" rel="noopener noreferrer">AgriConnect Admin</a>
                 <a class="btn-outline" href="https://my-farm-ai.vercel.app/admin09890.html" target="_blank" rel="noopener noreferrer">MyFarm AI Admin</a>
@@ -97,10 +119,11 @@
 
         <section class="card" style="margin-top:14px;">
             <h2 class="panel-title">User Products</h2>
+            <p class="small" style="margin:-6px 0 12px 0;">Edit or delete any listing when a valid admin key is set (server <code style="color:#9be7ca;">ADMIN_API_KEY</code>).</p>
             <div class="table-wrap">
                 <table>
                     <thead>
-                        <tr><th>Product</th><th>Category</th><th>Price</th><th>Seller</th><th>Created</th></tr>
+                        <tr><th>Product</th><th>Category</th><th>Price</th><th>Seller</th><th>Created</th><th>Actions</th></tr>
                     </thead>
                     <tbody id="products-body"></tbody>
                 </table>
@@ -110,8 +133,50 @@
         <p class="small" id="status-line">Ready.</p>
     </div>
 
+    <div id="product-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+        <div class="modal-box">
+            <h3 id="product-modal-title">Edit product</h3>
+            <form id="product-form">
+                <input type="hidden" id="edit-product-id">
+                <div class="field">
+                    <label for="edit-title">Title</label>
+                    <input type="text" id="edit-title" required maxlength="120">
+                </div>
+                <div class="field">
+                    <label for="edit-category">Category</label>
+                    <input type="text" id="edit-category" placeholder="e.g. Produce">
+                </div>
+                <div class="field">
+                    <label for="edit-price">Price (₦)</label>
+                    <input type="number" id="edit-price" min="0" step="1" required>
+                </div>
+                <div class="field">
+                    <label for="edit-seller-email">Seller email</label>
+                    <input type="email" id="edit-seller-email">
+                </div>
+                <div class="field">
+                    <label for="edit-seller-phone">Seller phone (WhatsApp)</label>
+                    <input type="text" id="edit-seller-phone" placeholder="+234…">
+                </div>
+                <div class="field">
+                    <label for="edit-image">Image URL</label>
+                    <input type="url" id="edit-image" placeholder="https://…">
+                </div>
+                <div class="field">
+                    <label for="edit-description">Description</label>
+                    <textarea id="edit-description"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn" id="edit-save-btn">Save changes</button>
+                    <button type="button" class="btn-outline" id="edit-cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const state = { data: null };
+        const ADMIN_KEY_STORAGE = "agriconnect_admin_api_key";
         const el = (id) => document.getElementById(id);
         const formatN = (n) => new Intl.NumberFormat().format(n || 0);
         const formatMoney = (n) => `N${formatN(Math.round(Number(n || 0)))}`;
@@ -146,12 +211,104 @@
 
         function renderProducts(products) {
             const tbody = el("products-body");
-            tbody.innerHTML = products.length ? "" : `<tr><td colspan="5" class="warn">No products found.</td></tr>`;
+            tbody.innerHTML = products.length ? "" : `<tr><td colspan="6" class="warn">No products found.</td></tr>`;
             products.forEach((p) => {
                 const tr = document.createElement("tr");
-                tr.innerHTML = `<td>${p.title || "Untitled"}</td><td><span class="pill">${p.category || "General"}</span></td><td>${formatMoney(p.price)}</td><td>${p.sellerEmail || "-"}</td><td>${formatDate(p.createdAt)}</td>`;
+                const seller = p.sellerEmail || "-";
+                tr.innerHTML = `<td>${esc(p.title || "Untitled")}</td><td><span class="pill">${esc(p.category || "General")}</span></td><td>${formatMoney(p.price)}</td><td>${esc(seller)}</td><td>${formatDate(p.createdAt)}</td><td class="actions"></td>`;
+                const act = tr.querySelector(".actions");
+                const edit = document.createElement("button");
+                edit.type = "button";
+                edit.className = "btn-sm btn-edit";
+                edit.textContent = "Edit";
+                edit.addEventListener("click", () => openProductModal(p));
+                const del = document.createElement("button");
+                del.type = "button";
+                del.className = "btn-sm btn-del";
+                del.textContent = "Delete";
+                del.addEventListener("click", () => deleteAdminProduct(p));
+                act.appendChild(edit);
+                act.appendChild(del);
                 tbody.appendChild(tr);
             });
+        }
+
+        function openProductModal(p) {
+            el("edit-product-id").value = p.id || "";
+            el("edit-title").value = p.title || "";
+            el("edit-category").value = p.category || "";
+            el("edit-price").value = p.price != null ? p.price : "";
+            el("edit-seller-email").value = p.sellerEmail && p.sellerEmail !== "N/A" ? p.sellerEmail : "";
+            el("edit-seller-phone").value = p.sellerPhone || "";
+            el("edit-image").value = p.image || "";
+            el("edit-description").value = p.description || "";
+            el("product-modal").classList.add("open");
+        }
+
+        function closeProductModal() {
+            el("product-modal").classList.remove("open");
+        }
+
+        el("product-modal").addEventListener("click", (e) => {
+            if (e.target.id === "product-modal") closeProductModal();
+        });
+        el("edit-cancel-btn").addEventListener("click", closeProductModal);
+
+        el("product-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = el("edit-product-id").value.trim();
+            if (!id) return;
+            const base = el("api-select").value;
+            const body = {
+                title: el("edit-title").value.trim(),
+                price: Number(el("edit-price").value),
+                category: el("edit-category").value.trim() || "General",
+                sellerEmail: el("edit-seller-email").value.trim(),
+                sellerPhone: el("edit-seller-phone").value.trim(),
+                image: el("edit-image").value.trim(),
+                description: el("edit-description").value.trim()
+            };
+            const btn = el("edit-save-btn");
+            btn.disabled = true;
+            try {
+                const res = await fetch(`${base}/admin/products/${encodeURIComponent(id)}`, {
+                    method: "PATCH",
+                    headers: adminHeaders(),
+                    body: JSON.stringify(body)
+                });
+                const json = await res.json().catch(() => ({}));
+                if (!res.ok || json.status !== "success") {
+                    throw new Error(json.error || json.message || `HTTP ${res.status}`);
+                }
+                closeProductModal();
+                el("status-line").textContent = "Product updated.";
+                await loadDashboard();
+            } catch (err) {
+                el("status-line").textContent = `Save failed: ${err.message}`;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        async function deleteAdminProduct(p) {
+            if (!p || !p.id) return;
+            if (!confirm(`Delete listing "${p.title || p.id}"? This cannot be undone.`)) return;
+            const base = el("api-select").value;
+            el("status-line").textContent = "Deleting…";
+            try {
+                const res = await fetch(`${base}/admin/products/${encodeURIComponent(p.id)}`, {
+                    method: "DELETE",
+                    headers: adminHeaders()
+                });
+                const json = await res.json().catch(() => ({}));
+                if (!res.ok || json.status !== "success") {
+                    throw new Error(json.error || json.message || `HTTP ${res.status}`);
+                }
+                el("status-line").textContent = "Product deleted.";
+                await loadDashboard();
+            } catch (err) {
+                el("status-line").textContent = `Delete failed: ${err.message}`;
+            }
         }
 
         function renderActivity(activity) {
@@ -216,6 +373,16 @@
         }
 
         el("refresh-btn").addEventListener("click", loadDashboard);
+        el("save-key-btn").addEventListener("click", () => {
+            const v = el("admin-key").value.trim();
+            if (v) sessionStorage.setItem(ADMIN_KEY_STORAGE, v);
+            else sessionStorage.removeItem(ADMIN_KEY_STORAGE);
+            el("status-line").textContent = v ? "Admin key saved for this browser session." : "Admin key cleared from session.";
+        });
+        (function initAdminKey() {
+            const saved = sessionStorage.getItem(ADMIN_KEY_STORAGE);
+            if (saved) el("admin-key").value = saved;
+        })();
         loadDashboard();
     </script>
 </body>

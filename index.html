@@ -187,18 +187,22 @@
         </section>
 
         <!-- MARKET SECTION -->
-        <section id="market" class="d-none">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h2 style="margin: 0; font-size: 2.25rem;">Marketplace</h2>
-                <button class="btn btn-primary" onclick="openModal('sell-modal')" style="padding: 0.75rem 1.5rem;">+
-                    Sell Item</button>
+        <section id="market" class="d-none market-section">
+            <div class="market-hero">
+                <div class="market-hero__text">
+                    <h2 class="market-hero__title">Marketplace</h2>
+                    <p class="market-hero__subtitle">Browse listings from farmers or post your own seeds, tools, and produce.</p>
+                </div>
+                <button type="button" class="btn btn-primary market-hero__cta" onclick="openSellModal()">+ Sell item</button>
             </div>
-            <div class="form-group" style="margin-bottom: 2rem;">
-                <input type="search" class="input-field" placeholder="Search premium crops, seeds, tools..."
-                    aria-label="Search products"
-                    style="padding: 1.25rem 1.5rem; border-radius: 100px; box-shadow: var(--shadow-soft);">
+            <div class="market-toolbar">
+                <input type="search" id="market-search" class="input-field market-search" placeholder="Search by name, category, or description…"
+                    aria-label="Search products" autocomplete="off">
+                <select id="market-category" class="input-field market-category-select" aria-label="Filter by category">
+                    <option value="all">All categories</option>
+                </select>
             </div>
-            <div class="product-grid" id="market-list">
+            <div class="product-grid" id="market-list" role="list">
                 <!-- Market items injected JS -->
             </div>
         </section>
@@ -284,18 +288,43 @@
                          <span>Total</span>
                          <span id="cart-total">₦0</span>
                      </div>
-                     <button class="btn btn-primary" style="width: 100%; padding: 1.25rem;" onclick="handleCheckout()">Checkout Now</button>
+                     <button type="button" class="btn btn-primary" id="checkout-btn" style="width: 100%; padding: 1.25rem;" onclick="handleCheckout()" disabled>Checkout Now</button>
+                     <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem;">Secure checkout — you’ll confirm phone &amp; notes next.</p>
                  </div>
              </div>
         </div>
 
     </main>
 
+    <!-- Checkout modal -->
+    <div id="checkout-modal" class="modal-backdrop">
+        <div class="modal-content checkout-modal-inner" style="max-width: 440px;">
+            <h3 style="margin-bottom: 1rem; font-size: 1.5rem;">Complete your order</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">Sellers may contact you on WhatsApp. Use a number you check often.</p>
+            <div id="checkout-summary" class="checkout-summary" aria-live="polite"></div>
+            <form id="checkout-form" onsubmit="submitCheckout(event)">
+                <div class="form-group">
+                    <label for="checkout-phone">Phone / WhatsApp</label>
+                    <input type="tel" id="checkout-phone" class="input-field" required placeholder="+234…" autocomplete="tel">
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="checkout-notes">Delivery notes <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+                    <textarea id="checkout-notes" class="input-field" rows="3" placeholder="Landmark, preferred time, etc." maxlength="500" style="resize: vertical;"></textarea>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal('checkout-modal')">Back</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;" id="checkout-submit-btn">Place order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal for Selling -->
     <div id="sell-modal" class="modal-backdrop">
         <div class="modal-content">
-            <h3 style="margin-bottom: 1.5rem; font-size: 1.75rem;">Sell Produce</h3>
+            <h3 id="sell-modal-title" style="margin-bottom: 1.5rem; font-size: 1.75rem;">List a product</h3>
             <form id="sell-form" onsubmit="handleSellSubmit(event)">
+                <input type="hidden" id="sell-product-id" value="">
                 <div class="form-group">
                     <label for="sell-name">Product Title</label>
                     <input type="text" id="sell-name" class="input-field" required placeholder="e.g. Organic Tomatoes"
@@ -317,6 +346,10 @@
                         step="100">
                 </div>
                 <div class="form-group">
+                    <label for="sell-description">Description <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+                    <textarea id="sell-description" class="input-field" rows="3" placeholder="Variety, quantity, pickup area…" maxlength="500" style="resize: vertical;"></textarea>
+                </div>
+                <div class="form-group">
                     <label for="sell-phone">Phone Number (WhatsApp)</label>
                     <input type="tel" id="sell-phone" class="input-field" placeholder="+234..." required>
                 </div>
@@ -327,7 +360,7 @@
                 <div style="display: flex; gap: 1rem;">
                     <button type="button" class="btn btn-outline" style="flex: 1;"
                         onclick="closeModal('sell-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">Post Listing</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;" id="sell-submit-btn">Post listing</button>
                 </div>
             </form>
         </div>

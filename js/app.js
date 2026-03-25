@@ -25,9 +25,16 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchVets();
     if (state.currentUser) {
         syncCart();
+    } else {
+        renderCart();
     }
 
     updateSignupLegalVisibility();
+
+    const marketSearch = document.getElementById('market-search');
+    const marketCategory = document.getElementById('market-category');
+    if (marketSearch) marketSearch.addEventListener('input', applyMarketFilter);
+    if (marketCategory) marketCategory.addEventListener('change', applyMarketFilter);
 
     scheduleInstallPopup();
     const installBtn = document.getElementById('install-btn');
@@ -106,17 +113,56 @@ window.showSection = function (sectionId) {
 };
 
 // Data Population (API Driven)
+function escapeHtml(text) {
+    if (text == null) return '';
+    const d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+}
+
 async function fetchProducts() {
     try {
         const res = await fetch(`${API_BASE}/products`);
         const data = await res.json();
         if (data.status === 'success') {
-            state.products = data.data;
-            populateMarketplace();
+            state.products = data.data || [];
+            rebuildMarketCategoryOptions();
+            applyMarketFilter();
         }
     } catch (err) {
         console.error('Failed to fetch products:', err);
     }
+}
+
+function rebuildMarketCategoryOptions() {
+    const sel = document.getElementById('market-category');
+    if (!sel) return;
+    const preserved = sel.value;
+    const cats = [...new Set(state.products.map((p) => p.category).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="all">All categories</option>';
+    cats.forEach((c) => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        sel.appendChild(opt);
+    });
+    if ([...sel.options].some((o) => o.value === preserved)) sel.value = preserved;
+}
+
+function applyMarketFilter() {
+    const q = (document.getElementById('market-search')?.value || '').trim().toLowerCase();
+    const cat = document.getElementById('market-category')?.value || 'all';
+    let list = state.products.slice();
+    if (cat !== 'all') list = list.filter((p) => p.category === cat);
+    if (q) {
+        list = list.filter(
+            (p) =>
+                (p.title && String(p.title).toLowerCase().includes(q)) ||
+                (p.category && String(p.category).toLowerCase().includes(q)) ||
+                (p.description && String(p.description).toLowerCase().includes(q))
+        );
+    }
+    populateMarketplace(list);
 }
 
 async function fetchVets() {
@@ -132,42 +178,113 @@ async function fetchVets() {
     }
 }
 
-function populateMarketplace() {
-    const containers = [document.getElementById('market-list')];
-    containers.forEach(container => {
-        if (!container) return;
-        container.innerHTML = '';
-        if (state.products.length === 0) {
-            container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">No products found. Be the first to sell!</p>';
-            return;
-        }
-        state.products.forEach(product => {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            
-            // Get high-quality placeholder if image is missing
-            const finalImage = product.image || getCategoryPlaceholder(product.category);
+function populateMarketplace(products) {
+    const list = products !== undefined ? products : state.products;
+    const container = document.getElementById('market-list');
+    if (!container) return;
+    container.innerHTML = '';
 
-            card.innerHTML = `
-                <img src="${finalImage}" alt="${product.title}" class="product-img" loading="lazy">
-                <div class="product-details">
-                    <div class="product-price">₦${product.price.toLocaleString()}</div>
-                    <div class="text-sm mb-1" style="font-weight:600;">${product.title}</div>
-                    <div class="text-xs text-muted mb-2">${product.category}</div>
-                    <button class="btn btn-primary text-xs mb-2" style="width: 100%; padding: 0.5rem;" onclick="addToCart('${product.id}')">Add to Cart</button>
-                    ${product.sellerPhone ? `
-                        <a href="https://wa.me/${product.sellerPhone.replace(/\D/g, '')}?text=Hello, I am interested in your ${product.title} on MyFarmAI" 
-                           target="_blank" class="btn btn-outline text-xs" style="width: 100%; padding: 0.5rem; text-decoration: none; display: flex; align-items: center; justify-content: center; border-color: #25D366; color: #25D366;">
-                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
-                             <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                           </svg>
-                           Contact Seller
-                        </a>
-                    ` : ''}
-                </div>
-            `;
-            container.appendChild(card);
-        });
+    if (!list.length) {
+        const noProducts = state.products.length === 0;
+        container.innerHTML = noProducts
+            ? '<p class="market-empty" style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">No listings yet. Tap <strong>Sell item</strong> to post seeds, tools, or produce.</p>'
+            : '<p class="market-empty" style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">No products match your search or filters. Try different keywords or choose &ldquo;All categories&rdquo;.</p>';
+        return;
+    }
+
+    const userEmail = state.currentUser?.email?.toLowerCase() || '';
+
+    list.forEach((product) => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.setAttribute('role', 'listitem');
+
+        const sellerEmail = (product.sellerEmail || '').toLowerCase();
+        const isOwner = Boolean(userEmail && sellerEmail && userEmail === sellerEmail);
+
+        if (isOwner) card.classList.add('product-card--own');
+
+        const finalImage = product.image || getCategoryPlaceholder(product.category);
+        const titleSafe = escapeHtml(product.title);
+        const catSafe = escapeHtml(product.category || '');
+        const rawDesc = String(product.description || '');
+        const descSnippet = rawDesc
+            ? `${escapeHtml(rawDesc.slice(0, 90))}${rawDesc.length > 90 ? '…' : ''}`
+            : '';
+        const wa = product.sellerPhone ? product.sellerPhone.replace(/\D/g, '') : '';
+        const msg = encodeURIComponent(`Hello, I am interested in your ${product.title} on MyFarmAI`);
+
+        const img = document.createElement('img');
+        img.src = finalImage;
+        img.alt = product.title || '';
+        img.className = 'product-img';
+        img.loading = 'lazy';
+
+        const details = document.createElement('div');
+        details.className = 'product-details';
+
+        let headerHtml = '';
+        if (isOwner) {
+            headerHtml = '<div class="product-card__badge">Your listing</div>';
+        }
+
+        details.innerHTML = `
+            ${headerHtml}
+            <div class="product-price">₦${Number(product.price).toLocaleString()}</div>
+            <div class="text-sm mb-1" style="font-weight:600;">${titleSafe}</div>
+            <div class="text-xs text-muted mb-2">${catSafe}</div>
+            ${descSnippet ? `<div class="text-xs text-muted mb-2" style="line-height:1.4;">${descSnippet}</div>` : ''}
+        `;
+
+        const actions = document.createElement('div');
+        actions.className = 'product-card__actions';
+
+        if (isOwner) {
+            const row = document.createElement('div');
+            row.className = 'product-card__row';
+            const editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'btn btn-outline text-xs';
+            editBtn.textContent = 'Edit';
+            editBtn.addEventListener('click', () => startEditProduct(product));
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'btn btn-outline text-xs';
+            delBtn.style.color = '#ef4444';
+            delBtn.style.borderColor = 'rgba(239,68,68,0.35)';
+            delBtn.textContent = 'Delete';
+            delBtn.addEventListener('click', () => deleteProduct(product.id));
+            row.appendChild(editBtn);
+            row.appendChild(delBtn);
+            actions.appendChild(row);
+        } else {
+            const addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.className = 'btn btn-primary text-xs';
+            addBtn.style.cssText = 'width: 100%; padding: 0.5rem;';
+            addBtn.textContent = 'Add to cart';
+            addBtn.addEventListener('click', () => addToCart(product.id));
+            actions.appendChild(addBtn);
+        }
+
+        if (product.sellerPhone && wa && !isOwner) {
+            const a = document.createElement('a');
+            a.href = `https://wa.me/${wa}?text=${msg}`;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.className = 'btn btn-outline text-xs';
+            a.style.cssText =
+                'width: 100%; padding: 0.5rem; text-decoration: none; display: flex; align-items: center; justify-content: center; border-color: #25D366; color: #25D366;';
+            a.innerHTML =
+                '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> Contact seller';
+            actions.appendChild(a);
+        }
+
+        details.appendChild(actions);
+
+        card.appendChild(img);
+        card.appendChild(details);
+        container.appendChild(card);
     });
 }
 
@@ -250,7 +367,8 @@ window.handleSellSubmit = async function (e) {
 
         if (data.status === 'success') {
             state.products.unshift(data.data);
-            populateMarketplace();
+            rebuildMarketCategoryOptions();
+            applyMarketFilter();
             document.getElementById('sell-form').reset();
             closeModal('sell-modal');
             showToast('Product Posted Successfully!', 'success');
@@ -438,7 +556,11 @@ window.addToCart = async function (productId) {
 };
 
 async function syncCart() {
-    if (!state.currentUser) return;
+    if (!state.currentUser) {
+        state.cart = [];
+        renderCart();
+        return;
+    }
     try {
         const res = await fetch(`${API_BASE}/cart?email=${state.currentUser.email}`);
         const data = await res.json();
@@ -455,6 +577,7 @@ function renderCart() {
     const list = document.getElementById('cart-items');
     const count = document.getElementById('cart-count');
     const totalEl = document.getElementById('cart-total');
+    const checkoutBtn = document.getElementById('checkout-btn');
 
     if (!list) return;
 
@@ -463,23 +586,46 @@ function renderCart() {
     let itemCount = 0;
 
     if (state.cart.length === 0) {
-        list.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding-top: 3rem;">Your cart is empty.</p>';
+        list.innerHTML = '<p class="cart-drawer-placeholder">Your cart is empty. Browse the marketplace and add items.</p>';
     } else {
-        state.cart.forEach(item => {
+        state.cart.forEach((item) => {
             const product = item.product;
-            total += (product.price * item.quantity);
+            const pid = item.productId;
+            total += product.price * item.quantity;
             itemCount += item.quantity;
 
             const div = document.createElement('div');
-            div.style.cssText = 'display: flex; gap: 1rem; align-items: center; padding: 1rem 0; border-bottom: 1px solid var(--border-soft);';
+            div.className = 'cart-line';
             div.innerHTML = `
-                <img src="${product.image || 'images/maize.png'}" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
-                <div style="flex: 1;">
-                    <div style="font-weight: 600;">${product.title}</div>
-                    <div style="color: var(--primary); font-size: 0.9rem;">₦${product.price.toLocaleString()} x ${item.quantity}</div>
+                <img class="cart-line__img" src="${product.image || 'images/maize.png'}" alt="">
+                <div class="cart-line__meta">
+                    <div style="font-weight: 600; font-size: 0.95rem;">${escapeHtml(product.title)}</div>
+                    <div style="color: var(--primary); font-size: 0.85rem; margin-top: 0.25rem;">₦${Number(product.price).toLocaleString()} × ${item.quantity}</div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.6rem; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-outline cart-qty-btn" data-act="dec" data-pid="${pid}" style="padding: 0.25rem 0.55rem; min-width: 2rem; font-size: 1rem; line-height: 1;" aria-label="Decrease quantity">−</button>
+                        <span style="font-weight: 700; min-width: 1.5rem; text-align: center;">${item.quantity}</span>
+                        <button type="button" class="btn btn-outline cart-qty-btn" data-act="inc" data-pid="${pid}" style="padding: 0.25rem 0.55rem; min-width: 2rem; font-size: 1rem; line-height: 1;" aria-label="Increase quantity">+</button>
+                        <button type="button" class="btn btn-outline cart-remove-btn" data-pid="${pid}" style="margin-left: auto; padding: 0.35rem 0.65rem; font-size: 0.75rem; color: #ef4444; border-color: rgba(239,68,68,0.4);">Remove</button>
+                    </div>
                 </div>
             `;
             list.appendChild(div);
+        });
+
+        list.querySelectorAll('.cart-qty-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const pid = btn.getAttribute('data-pid');
+                const act = btn.getAttribute('data-act');
+                const item = state.cart.find((i) => i.productId === pid);
+                if (!item) return;
+                let q = item.quantity;
+                if (act === 'inc') q += 1;
+                else q -= 1;
+                updateCartQuantity(pid, q);
+            });
+        });
+        list.querySelectorAll('.cart-remove-btn').forEach((btn) => {
+            btn.addEventListener('click', () => removeCartItem(btn.getAttribute('data-pid')));
         });
     }
 
@@ -487,12 +633,109 @@ function renderCart() {
         count.textContent = itemCount;
         count.classList.toggle('cart-count-pill--empty', itemCount === 0);
     }
-    totalEl.textContent = `₦${total.toLocaleString()}`;
+    if (totalEl) totalEl.textContent = `₦${total.toLocaleString()}`;
+    if (checkoutBtn) {
+        checkoutBtn.disabled = itemCount === 0;
+        checkoutBtn.setAttribute('aria-disabled', itemCount === 0 ? 'true' : 'false');
+    }
+}
+
+async function updateCartQuantity(productId, quantity) {
+    if (!state.currentUser) return;
+    try {
+        const res = await fetch(`${API_BASE}/cart/update`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: state.currentUser.email,
+                productId,
+                quantity
+            })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            state.cart = data.data;
+            renderCart();
+        } else {
+            showToast(data.error || 'Could not update cart.', 'error');
+        }
+    } catch (err) {
+        showToast('Could not reach server.', 'error');
+    }
+}
+
+async function removeCartItem(productId) {
+    await updateCartQuantity(productId, 0);
 }
 
 window.handleCheckout = function () {
-    showToast('Checkout feature coming soon!', 'info');
-    toggleCart();
+    if (!state.currentUser) {
+        showToast('Please sign in to checkout.', 'error');
+        showSection('auth');
+        return;
+    }
+    if (!state.cart || state.cart.length === 0) {
+        showToast('Your cart is empty.', 'info');
+        return;
+    }
+    const phoneEl = document.getElementById('checkout-phone');
+    const notesEl = document.getElementById('checkout-notes');
+    if (phoneEl) phoneEl.value = '';
+    if (notesEl) notesEl.value = '';
+
+    const summaryEl = document.getElementById('checkout-summary');
+    if (summaryEl) {
+        let sub = 0;
+        const lines = state.cart.map((item) => {
+            const p = item.product;
+            const line = Number(p.price) * item.quantity;
+            sub += line;
+            return `<div class="checkout-summary__line"><span>${escapeHtml(p.title)} × ${item.quantity}</span><span>₦${line.toLocaleString()}</span></div>`;
+        });
+        summaryEl.innerHTML =
+            lines.join('') +
+            `<div class="checkout-summary__line"><span>Total</span><span>₦${sub.toLocaleString()}</span></div>`;
+    }
+
+    const panel = document.getElementById('cart-panel');
+    if (panel && panel.classList.contains('open')) {
+        panel.classList.remove('open');
+    }
+    openModal('checkout-modal');
+};
+
+window.submitCheckout = async function (e) {
+    e.preventDefault();
+    if (!state.currentUser) return;
+
+    const phone = document.getElementById('checkout-phone').value.trim();
+    const notes = document.getElementById('checkout-notes').value.trim();
+    const btn = document.getElementById('checkout-submit-btn');
+    if (btn) btn.disabled = true;
+
+    try {
+        const res = await fetch(`${API_BASE}/checkout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: state.currentUser.email,
+                deliveryPhone: phone,
+                notes
+            })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || data.message || 'Checkout failed');
+        }
+        closeModal('checkout-modal');
+        const oid = data.data && data.data.orderId ? data.data.orderId : '';
+        showToast(oid ? `Order placed! ID: ${oid.slice(0, 8)}…` : 'Order placed successfully!', 'success');
+        await syncCart();
+    } catch (err) {
+        showToast(err.message || 'Could not place order.', 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
 };
 
 // Toast Notification System
