@@ -216,7 +216,10 @@ function populateMarketplace(products) {
 
         if (isOwner) card.classList.add('product-card--own');
 
-        const finalImage = product.image || getCategoryPlaceholder(product.category);
+        const rawImg = product.image;
+        const imgUrl =
+            rawImg != null && String(rawImg).trim() !== '' ? String(rawImg).trim() : '';
+        const finalImage = imgUrl || getCategoryPlaceholder(product.category);
         const titleSafe = escapeHtml(product.title);
         const catSafe = escapeHtml(product.category || '');
         const rawDesc = String(product.description || '');
@@ -231,6 +234,12 @@ function populateMarketplace(products) {
         img.alt = product.title || '';
         img.className = 'product-img';
         img.loading = 'lazy';
+        img.decoding = 'async';
+        img.referrerPolicy = 'no-referrer';
+        img.onerror = function () {
+            img.onerror = null;
+            img.src = getCategoryPlaceholder(product.category);
+        };
 
         const details = document.createElement('div');
         details.className = 'product-details';
@@ -377,6 +386,18 @@ function showSellImagePreview(url) {
     if (wrap) wrap.style.display = 'block';
 }
 
+/** Resolves product image URL from hidden field, paste field, or preview img (covers sync issues after upload). */
+function resolveProductImageUrl() {
+    const hidden = document.getElementById('sell-image')?.value?.trim() || '';
+    const fallback = document.getElementById('sell-image-url-fallback')?.value?.trim() || '';
+    const preview = document.getElementById('sell-image-preview');
+    let previewUrl = '';
+    if (preview && preview.src && /^https?:\/\//i.test(preview.src)) {
+        previewUrl = preview.src.trim();
+    }
+    return hidden || fallback || previewUrl || '';
+}
+
 async function uploadSellImageToCloudinary(file) {
     const status = document.getElementById('sell-upload-status');
     if (status) status.textContent = 'Uploading…';
@@ -483,9 +504,7 @@ window.handleSellSubmit = async function (e) {
     const title = document.getElementById('sell-name').value;
     const price = document.getElementById('sell-price').value;
     const category = document.getElementById('sell-category').value;
-    const hiddenImg = document.getElementById('sell-image')?.value?.trim() || '';
-    const fallbackImg = document.getElementById('sell-image-url-fallback')?.value?.trim() || '';
-    const image = hiddenImg || fallbackImg;
+    const image = resolveProductImageUrl();
     const phone = document.getElementById('sell-phone').value;
     const description = document.getElementById('sell-description')?.value?.trim() || '';
 
@@ -495,11 +514,13 @@ window.handleSellSubmit = async function (e) {
         title,
         price,
         category,
-        image,
         phone,
         description,
         email: state.currentUser.email
     };
+    if (image) {
+        payload.image = image;
+    }
 
     try {
         if (editId) {
