@@ -54,7 +54,7 @@
             <a href="#" class="active" onclick="showSection('home'); return false;">Overview</a>
             <a href="#" onclick="showSection('ai-chat'); return false;">AI Assistant</a>
             <a href="#" onclick="showSection('market'); return false;">Marketplace</a>
-            <a href="#" onclick="window.open('http://agriconnect.gt.tc/', '_blank'); return false;">Vet Connect</a>
+            <a href="#" onclick="showSection('consult'); return false;">Vet Connect</a>
         </nav>
         <div class="user-actions header-actions" role="toolbar" aria-label="Account and cart">
             <button type="button" class="header-action-btn header-action-btn--cart" onclick="toggleCart()"
@@ -147,7 +147,7 @@
                 </div>
             </div>
 
-            <div class="feature-card" onclick="window.open('http://agriconnect.gt.tc/', '_blank')">
+            <div class="feature-card" onclick="showSection('consult')">
                 <div class="icon-wrapper">
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -184,6 +184,12 @@
         <section id="ai-chat" class="d-none full-height-section">
             <iframe id="ai-iframe" src="https://my-farm-ai.vercel.app/" class="app-iframe" title="MyFarmAI Assistant"
                 allow="microphone"></iframe>
+        </section>
+
+        <!-- VET CONNECT SECTION (embedded conn app) -->
+        <section id="consult" class="d-none full-height-section">
+            <iframe id="vet-connect-iframe" src="conn/index.html" class="app-iframe" title="Vet Connect"
+                style="background: var(--bg-base); border: 0;"></iframe>
         </section>
 
         <!-- MARKET SECTION -->
@@ -419,8 +425,7 @@
             </svg>
             Shop
         </a>
-        <a href="#" class="nav-item" onclick="window.open('http://agriconnect.gt.tc/', '_blank'); return false;"
-            id="nav-consult">
+        <a href="#" class="nav-item" onclick="showSection('consult'); return false;" id="nav-consult">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>

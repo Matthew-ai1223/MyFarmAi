@@ -93,7 +93,7 @@ window.showSection = function (sectionId) {
         'home': 'Home',
         'ai-chat': 'Ask AI',
         'market': 'Shop',
-        'consult': 'Consult Vets'
+        'consult': 'Vet Connect'
     };
 
     // Bottom Nav
