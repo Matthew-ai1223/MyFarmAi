@@ -397,16 +397,18 @@ function populateVets() {
     container.innerHTML = '';
 
     state.vets.forEach(vet => {
+        const spec = vet.specialization || vet.specialty || '';
+        const imgSrc = vet.image_url || vet.img || 'https://via.placeholder.com/60';
         const card = document.createElement('div');
         card.className = 'card vet-card';
         card.style.marginBottom = '0.75rem';
         card.innerHTML = `
             <div class="vet-avatar flex-center" style="overflow: hidden;">
-                <img src="${vet.img || 'https://via.placeholder.com/60'}" alt="${vet.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                <img src="${imgSrc}" alt="${vet.name}" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
             <div style="flex: 1;">
                 <h4 style="margin: 0; font-size: 1rem;">${vet.name}</h4>
-                <p class="text-xs text-muted" style="margin: 0;">${vet.specialization}</p>
+                <p class="text-xs text-muted" style="margin: 0;">${spec}</p>
                 <div class="text-xs text-primary">★ ${vet.rating} / 5.0</div>
             </div>
             <button class="btn btn-outline text-xs" onclick="showSection('consult')">Consult</button>
