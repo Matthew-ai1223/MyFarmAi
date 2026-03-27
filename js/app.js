@@ -19,6 +19,10 @@ const API_BASE =
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
+    updateHeaderLayoutOffset();
+    window.addEventListener('resize', updateHeaderLayoutOffset);
+    window.addEventListener('orientationchange', updateHeaderLayoutOffset);
+
     // Navigate to Home initially
     showSection('home');
     updateAuthUI();
@@ -221,6 +225,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const notifBtn = document.getElementById('notif-btn');
     if (notifBtn) notifBtn.classList.remove('d-none');
 });
+
+function updateHeaderLayoutOffset() {
+    const header = document.querySelector('.header');
+    if (!header) return;
+    const headerHeight = Math.ceil(header.getBoundingClientRect().height);
+    document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+}
 
 // Navigation Logic
 window.showSection = function (sectionId) {

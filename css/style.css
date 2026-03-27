@@ -37,6 +37,7 @@
     /* Typography */
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Outfit', sans-serif;
+    --header-height: 72px;
     
     --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -90,9 +91,11 @@ h3 { font-size: clamp(1.25rem, 4vw, 1.75rem); }
 
 /* Header */
 .header {
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 100;
+    left: 0;
+    right: 0;
+    z-index: 1200;
     background: var(--bg-glass);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -102,6 +105,10 @@ h3 { font-size: clamp(1.25rem, 4vw, 1.75rem); }
     justify-content: space-between;
     align-items: center;
     box-shadow: var(--shadow-glass);
+}
+
+#app-content {
+    padding-top: calc(var(--header-height) + 1rem);
 }
 
 .logo {
@@ -797,8 +804,9 @@ label {
 /* Full-height sections */
 .full-height-section {
     position: fixed;
-    inset: 72px 0 0 0; /* Below header */
+    inset: var(--header-height) 0 0 0; /* Always below dynamic header height */
     padding: 0 !important;
+    z-index: 40;
 }
 
 @media (max-width: 767px) {
