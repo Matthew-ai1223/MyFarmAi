@@ -3,80 +3,209 @@
 [![Database](https://img.shields.io/badge/Database-MongoDB_Atlas-green?logo=mongodb)](https://www.mongodb.com/atlas)
 [![AI Model](https://img.shields.io/badge/AI-Llama_3.3_70B-blue?logo=meta)](https://groq.com/)
 
-**MyFarmAI** is a comprehensive, AI-driven Progressive Web App (PWA) designed to modernize the agricultural experience in Nigeria. It integrates advanced AI consultation, a real-time marketplace, and veterinary expert connectivity into a single, seamless platform.
+MyFarmAI is a PWA focused on Nigeria's agriculture ecosystem. It combines:
+- AI farming assistant
+- Marketplace (list, browse, cart, checkout)
+- Vet/consultant connection module (`conn`)
+- Push notifications for updates
 
 ---
 
-## 📑 Project Breakdown Report
+## System Overview
 
-### 1. 🚀 Core Features
-*   **🧠 Intelligent AI Assistant (ChatGPT-style)**:
-    *   **Persistent Conversations**: Multi-session history saved to MongoDB.
-    *   **Contextual Knowledge**: The AI has real-time access to current marketplace listings and certified consultants.
-    *   **Agricultural Expertise**: Powered by Llama 3.3 (70B) for high-accuracy crop, livestock, and soil advice.
-*   **🛒 Digital Marketplace**:
-    *   **Verified Listings**: Real-time product posting with categories and smart image placeholders.
-    *   **Persistent Shopping Cart**: Cross-device cart synchronization linked to user accounts.
-    *   **Direct Contact**: One-click WhatsApp integration to connect buyers directly with farmers/sellers.
-*   **🏥 Veterinary Consultation**:
-    *   Dynamic consultant suggestions based on availability and specialty.
-    *   Static fallback system ensuring service uptime even during database maintenance.
-*   **📱 Native PWA Experience**:
-    *   Installable on Android/iOS.
-    *   Offline-ready with Service Worker caching.
-    *   Mobile-first, premium glassmorphism design.
+### Frontend apps
+1. **Main shell app (`/index.html`, `/js/app.js`)**
+   - Marketplace UI, auth UI, cart, checkout, and notification setup.
+   - Calls backend APIs under `/api`.
+2. **Vet Connect app (`/conn`)**
+   - Public booking UI (`conn/index.html` + `conn/assets/js/script.js`).
+   - Admin specialist/appointment UI (`conn/admin.html` + `conn/assets/js/admin.js`).
+   - Calls backend APIs under `/backend/conn/*`.
+3. **AI chat iframe**
+   - Embedded as an iframe (`https://my-farm-ai.vercel.app/`).
+   - Receives login/logout sync via `window.postMessage` from the main shell.
 
-### 2. 🛡️ Advanced Authentication Bridge (SSO)
-One of the most complex architectural achievements is the **Unified Auth Bridge**:
-*   **The Shell**: The main Marketplace app (`index.html`) manages the primary user session in `localStorage`.
-*   **The Bridge**: Uses `window.postMessage` to securely sync the user's authentication state to the embedded AI Assistant iframe.
-*   **Automatic Login**: Users log in once to the Marketplace and are automatically authenticated within the AI Chat, providing a unified "Single Sign-On" experience.
-
-### 3. 🛠️ Technical Architecture
-#### **Frontend (Shell & AI Console)**
-- **Structure**: Vanilla HTML5 (Semantic)
-- **Styling**: Premium CSS3 System (Variables, Flex/Grid, Keyframe Animations)
-- **Logic**: Async JavaScript (ES6+)
-- **Communications**: Cross-Origin Messaging (PostMessage API)
-
-#### **Backend (AI Engine)**
-- **Runtime**: Node.js (Express.js)
-- **Database**: MongoDB Atlas (Mongoose ODM)
-- **LLM API**: Groq Cloud (Llama 3.3 70B Versatile)
-- **Deployment**: Vercel Serverless Functions
-
-### 4. 🗄️ Database Schema Breakdown
-*   **User**: Handles authentication and role-based access.
-*   **Conversation**: Stores unique chat sessions with ID-based retrieval.
-*   **Product**: Manages marketplace inventory (Title, Price, Category, Seller Contact).
-*   **Cart**: Persistent user-item relations for frictionless shopping.
-*   **Consultant**: Profile-based data for agricultural experts.
+### Backend app
+- Location: `ai_enginr/backend`
+- Entry: `server.js` -> `src/app.js`
+- Stack: Node.js + Express + MongoDB (Mongoose) + Groq + Cloudinary + Web Push
+- Route groups:
+  - `/api/*` for main app features
+  - `/backend/*` for Vet Connect compatibility endpoints
 
 ---
 
-## ⚡ Setup & Deployment
-### **Pre-requisites**
-- Node.js 18+
-- MongoDB Atlas Cluster
-- Groq API Key
+## How Frontend Interacts with Backend
 
-### **Local Development**
-1. Clone the repository and navigate to `/ai_enginr/backend`.
-2. Create a `.env` file with:
-   ```env
-   MONGODB_URI=your_atlas_uri
-   GROQ_API_KEY=your_groq_key
-   ```
-3. Install dependencies and start:
+### Main shell -> `/api`
+`js/app.js` sets:
+- Local: `http://localhost:3000/api`
+- Production: `https://farm-ai-iota.vercel.app/api`
+
+Main user flows:
+- Auth: POST `/api/auth`
+- Marketplace: GET/POST/PATCH/DELETE `/api/products*`
+- Cart: GET `/api/cart`, POST `/api/cart/add`, POST `/api/cart/update`
+- Checkout: POST `/api/checkout`
+- Notifications: GET `/api/notifications/vapid-public-key`, POST `/api/notifications/subscribe`
+- Cloudinary upload: POST `/api/upload/cloudinary`
+- Consultants listing: GET `/api/consultants`
+
+### Vet Connect (`/conn`) -> `/backend`
+`conn/assets/js/script.js` and `conn/assets/js/admin.js` set:
+- Local: `http://localhost:3000/backend`
+- Production: `https://farm-ai-iota.vercel.app/backend`
+
+Used flows:
+- Specialists: GET `/backend/conn/professionals`
+- Bookings: POST `/backend/conn/book`
+- Admin appointments: GET `/backend/conn/appointments`
+- Admin specialist create/update/delete:
+  - POST `/backend/conn/professionals`
+  - POST `/backend/conn/professionals/:id`
+  - DELETE `/backend/conn/professionals/:id`
+- Admin appointment delete: DELETE `/backend/conn/appointments/:id`
+- Image upload for specialist: POST `/backend/conn/upload` (`image_file`)
+
+### Main shell <-> AI iframe auth bridge
+- On login/logout in main app, shell sends:
+  - `{ type: 'LOGIN_SYNC', email }`
+  - `{ type: 'LOGOUT' }`
+- Transport: `window.postMessage`
+- Purpose: single login experience across shell and AI iframe.
+
+---
+
+## Backend API Reference (All Endpoints)
+
+Base host examples:
+- Local: `http://localhost:3000`
+- Production: `https://farm-ai-iota.vercel.app`
+
+### Health
+- `GET /`
+- `GET /health`
+- `GET /favicon.ico`
+- `GET /favicon.png`
+
+### Core `/api` routes
+- **Auth**
+  - `POST /api/auth`
+- **Chat + conversations**
+  - `POST /api/chat`
+  - `GET /api/conversations?email=...`
+  - `GET /api/history?email=...&conversationId=...`
+- **Consultants**
+  - `GET /api/consultants`
+- **Products**
+  - `GET /api/products`
+  - `POST /api/products`
+  - `PATCH /api/products/:id`
+  - `DELETE /api/products/:id`
+- **Cart**
+  - `GET /api/cart?email=...`
+  - `POST /api/cart/add`
+  - `POST /api/cart/update`
+- **Orders**
+  - `POST /api/checkout`
+  - `GET /api/orders?email=...`
+- **Notifications**
+  - `GET /api/notifications/vapid-public-key`
+  - `POST /api/notifications/subscribe`
+  - `POST /api/notifications/broadcast`
+- **Uploads**
+  - `GET /api/upload/cloudinary-status`
+  - `POST /api/upload/cloudinary` (`image` form-data)
+- **Admin**
+  - `GET /api/admin/all`
+  - `GET /api/admin/overview`
+  - `PATCH /api/admin/products/:id` (requires `x-admin-key`)
+  - `DELETE /api/admin/products/:id` (requires `x-admin-key`)
+
+### Vet Connect `/backend` routes
+Preferred clean endpoints:
+- `GET /backend/conn/professionals`
+- `GET /backend/conn/appointments`
+- `POST /backend/conn/book`
+- `POST /backend/conn/professionals`
+- `POST /backend/conn/professionals/:id`
+- `DELETE /backend/conn/professionals/:id`
+- `DELETE /backend/conn/appointments/:id`
+- `POST /backend/conn/upload` (`image_file` form-data)
+
+Legacy compatible endpoints (still supported):
+- `GET /backend/api.php?action=get_professionals`
+- `GET /backend/api.php?action=get_appointments`
+- `POST /backend/api.php` with action:
+  - `book`
+  - `add_professional`
+  - `update_professional`
+  - `delete_professional`
+  - `delete_appointment`
+- `POST /backend/upload.php` (`image_file` form-data)
+
+---
+
+## Backend Dependencies (`ai_enginr/backend`)
+
+From `ai_enginr/backend/package.json`:
+- `express`: HTTP server and routing
+- `cors`: cross-origin requests
+- `dotenv`: environment variable loading
+- `mongoose`: MongoDB ODM
+- `groq-sdk`: LLM chat completions
+- `multer`: multipart/form-data file handling
+- `cloudinary`: cloud image upload/storage
+- `web-push`: browser push notifications
+- `node-fetch`: HTTP fetch support on server
+
+---
+
+## Environment Variables
+
+Minimum required for core functionality:
+```env
+MONGODB_URI=your_mongodb_connection_string
+GROQ_API_KEY=your_groq_api_key
+```
+
+Optional but recommended:
+```env
+# Cloudinary (for image uploads)
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
+
+# Push notifications (VAPID)
+VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
+
+# Admin product management protection
+ADMIN_API_KEY=...
+```
+
+---
+
+## Local Development
+
+1. Start backend:
    ```bash
+   cd ai_enginr/backend
    npm install
    npm run dev
    ```
-4. Serve the root folder (`/`) using any web server (e.g., Live Server) to access the main app.
-
-### **Production Deployment**
-This project is optimized for **Vercel**. Simply connect your GitHub repository, add your `.env` variables to Vercel, and it will deploy instantly.
+2. Serve repo root (`/`) with a static server (Live Server or similar).
+3. Open app in browser.
+   - Main shell runs from root files.
+   - Vet Connect runs from `/conn`.
+   - Main shell targets `/api`, Vet Connect targets `/backend`.
 
 ---
 
-**Developed with ❤️ for the future of Farming.**
+## Deployment
+
+This project is configured for Vercel-style deployment. Ensure all required env vars are set in your deployment environment.
+
+---
+
+Developed for the future of farming.
