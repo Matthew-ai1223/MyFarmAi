@@ -1032,6 +1032,7 @@ function updateAuthUI() {
         userDisplay.classList.add('d-none');
         userDisplay.style.display = 'none';
     }
+    requestAnimationFrame(() => updateHeaderLayoutOffset());
 }
 
 // Cart Logic
@@ -1319,6 +1320,78 @@ window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
 });
+
+/**
+ * Android / PWA back button: first back shows a toast; second back within a short window leaves the app.
+ * If the cart drawer or a modal is open, back closes that first (standard UX).
+ */
+function initDoubleBackToExit() {
+    const EXIT_WINDOW_MS = 2800;
+    let exitBackPending = false;
+    let exitBackTimer = null;
+
+    function clearExitTimer() {
+        if (exitBackTimer) {
+            clearTimeout(exitBackTimer);
+            exitBackTimer = null;
+        }
+    }
+
+    function pushTrapState() {
+        try {
+            history.pushState({ myfarmaiExitGuard: true }, '', location.href);
+        } catch (_) {
+            // ignore
+        }
+    }
+
+    function dismissTopOverlay() {
+        const cart = document.getElementById('cart-panel');
+        if (cart && cart.classList.contains('open')) {
+            cart.classList.remove('open');
+            return true;
+        }
+        const modal = document.querySelector('.modal-backdrop.open');
+        if (modal && modal.id && typeof window.closeModal === 'function') {
+            window.closeModal(modal.id);
+            return true;
+        }
+        return false;
+    }
+
+    window.addEventListener('popstate', () => {
+        if (dismissTopOverlay()) {
+            pushTrapState();
+            exitBackPending = false;
+            clearExitTimer();
+            return;
+        }
+
+        if (!exitBackPending) {
+            exitBackPending = true;
+            pushTrapState();
+            showToast('Press back again to close the app.', 'info');
+            clearExitTimer();
+            exitBackTimer = setTimeout(() => {
+                exitBackPending = false;
+                exitBackTimer = null;
+            }, EXIT_WINDOW_MS);
+            return;
+        }
+
+        clearExitTimer();
+        exitBackPending = false;
+        history.back();
+    });
+
+    pushTrapState();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDoubleBackToExit);
+} else {
+    initDoubleBackToExit();
+}
 
 window.addEventListener('pageshow', (event) => {
     if (event.persisted) scheduleInstallPopup();

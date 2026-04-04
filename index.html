@@ -41,23 +41,24 @@
     </svg>
 
     <!-- Header -->
-    <header class="header">
-        <div class="logo">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.77 10.3-8 10z"></path>
-                <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
-            </svg>
-            MyFarmAI
-        </div>
-        <nav class="desktop-nav">
-            <a href="#" class="active" onclick="showSection('home'); return false;">Overview</a>
-            <a href="#" onclick="showSection('ai-chat'); return false;">AI Assistant</a>
-            <a href="#" onclick="showSection('market'); return false;">Marketplace</a>
-            <a href="#" onclick="showSection('consult'); return false;">Vet Connect</a>
-        </nav>
-        <div class="user-actions header-actions" role="toolbar" aria-label="Account and cart">
-            <button type="button" class="header-action-btn header-action-btn--cart" onclick="toggleCart()"
+    <header class="header" role="banner">
+        <div class="header-inner">
+            <div class="logo" aria-label="MyFarmAI home">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.77 10.3-8 10z"></path>
+                    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+                </svg>
+                <span class="logo__text">MyFarmAI</span>
+            </div>
+            <nav class="desktop-nav" aria-label="Primary navigation">
+                <a href="#" class="active" onclick="showSection('home'); return false;">Overview</a>
+                <a href="#" onclick="showSection('ai-chat'); return false;">AI Assistant</a>
+                <a href="#" onclick="showSection('market'); return false;">Marketplace</a>
+                <a href="#" onclick="showSection('consult'); return false;">Vet Connect</a>
+            </nav>
+            <div class="user-actions header-actions" role="toolbar" aria-label="Account and cart">
+                <button type="button" class="header-action-btn header-action-btn--cart" onclick="toggleCart()"
                 aria-label="Open shopping cart" id="cart-header-btn">
                 <span class="header-action-btn__icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -69,9 +70,9 @@
                 </span>
                 <span class="header-action-btn__text">Cart</span>
                 <span id="cart-count" class="cart-count-pill cart-count-pill--empty" aria-live="polite">0</span>
-            </button>
+                </button>
 
-            <button type="button" class="header-action-btn header-action-btn--account" id="profile-btn"
+                <button type="button" class="header-action-btn header-action-btn--account" id="profile-btn"
                 onclick="showSection('auth')" aria-label="Sign in or create account">
                 <span class="header-action-btn__icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -81,9 +82,9 @@
                     </svg>
                 </span>
                 <span class="header-action-btn__text">Sign in</span>
-            </button>
+                </button>
 
-            <button type="button" class="header-action-btn header-action-btn--notif d-none" id="notif-btn"
+                <button type="button" class="header-action-btn header-action-btn--notif d-none" id="notif-btn"
                 onclick="enableNotifications()" aria-label="Enable push notifications">
                 <span class="header-action-btn__icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -93,15 +94,16 @@
                     </svg>
                 </span>
                 <span class="header-action-btn__text">Alerts</span>
-            </button>
+                </button>
 
-            <div id="user-display" class="d-none user-chip" role="status" aria-live="polite">
+                <div id="user-display" class="d-none user-chip" role="status" aria-live="polite">
                 <span class="user-chip__avatar" id="user-avatar-initial" aria-hidden="true">U</span>
                 <div class="user-chip__info">
                     <span class="user-chip__label">Signed in</span>
                     <span id="user-email-header" class="user-chip__email"></span>
                 </div>
                 <button type="button" class="user-chip__logout" onclick="handleLogout()">Log out</button>
+                </div>
             </div>
         </div>
     </header>
@@ -499,6 +501,7 @@
         </a>
     </nav>
 
+    <!-- Hardware / browser back: first press prompts; second press exits (see initDoubleBackToExit in js/app.js). -->
     <script src="js/app.js"></script>
 </body>
 
