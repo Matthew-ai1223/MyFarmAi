@@ -55,6 +55,7 @@
         .modal-actions { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
         .key-row { align-items:flex-end; }
         .key-row input[type="password"] { flex:1; min-width:200px; }
+        .key-input { min-width: 220px; }
         @media (max-width:1100px){ .grid4{grid-template-columns:repeat(2,minmax(0,1fr));} .main{grid-template-columns:1fr;} }
     </style>
 </head>
@@ -70,6 +71,7 @@
                     <option value="http://localhost:3000/api">Local API (http://localhost:3000/api)</option>
                     <option value="https://farm-ai-iota.vercel.app/api" selected>Production API (farm-ai-iota.vercel.app/api)</option>
                 </select>
+                <input type="password" id="admin-key" class="key-input" placeholder="Admin API key" autocomplete="off">
                 <button class="btn" id="refresh-btn">Refresh Data</button>
                 <a class="btn-outline" href="http://agriconnect.gt.tc/admin.html" target="_blank" rel="noopener noreferrer">AgriConnect Admin</a>
                 <a class="btn-outline" href="https://my-farm-ai.vercel.app/admin09890.html" target="_blank" rel="noopener noreferrer">MyFarm AI Admin</a>
@@ -89,7 +91,7 @@
                 <div class="table-wrap">
                     <table>
                         <thead>
-                            <tr><th>Email</th><th>Conversations</th><th>Messages</th><th>Last Seen</th></tr>
+                            <tr><th>Email</th><th>Conversations</th><th>Messages</th><th>Last Seen</th><th>Actions</th></tr>
                         </thead>
                         <tbody id="users-body"></tbody>
                     </table>
@@ -138,7 +140,7 @@
             <div class="table-wrap">
                 <table>
                     <thead>
-                        <tr><th>Product</th><th>Category</th><th>Price</th><th>Seller</th><th>Created</th></tr>
+                        <tr><th>Product</th><th>Category</th><th>Price</th><th>Seller</th><th>Created</th><th>Actions</th></tr>
                     </thead>
                     <tbody id="products-body"></tbody>
                 </table>
@@ -203,6 +205,21 @@
         const formatMoney = (n) => `N${formatN(Math.round(Number(n || 0)))}`;
         const formatDate = (d) => d ? new Date(d).toLocaleString() : "-";
 
+        function getAdminKey() {
+            return (el("admin-key")?.value || localStorage.getItem("myfarmai_admin_key") || "").trim();
+        }
+
+        function adminHeaders(extra = {}) {
+            const key = getAdminKey();
+            if (!key) throw new Error("Enter Admin API key first.");
+            localStorage.setItem("myfarmai_admin_key", key);
+            return {
+                "Content-Type": "application/json",
+                "x-admin-key": key,
+                ...extra
+            };
+        }
+
         async function fetchOverview() {
             const base = el("api-select").value;
             el("status-line").textContent = "Loading admin data...";
@@ -222,17 +239,22 @@
 
         function renderUsers(users) {
             const tbody = el("users-body");
-            tbody.innerHTML = users.length ? "" : `<tr><td colspan="4" class="warn">No users found.</td></tr>`;
+            tbody.innerHTML = users.length ? "" : `<tr><td colspan="5" class="warn">No users found.</td></tr>`;
             users.forEach((u) => {
                 const tr = document.createElement("tr");
-                tr.innerHTML = `<td>${u.email}</td><td>${formatN(u.conversations)}</td><td>${formatN(u.messages)}</td><td>${formatDate(u.lastSeen)}</td>`;
+                tr.innerHTML =
+                    `<td>${esc(u.email)}</td>` +
+                    `<td>${formatN(u.conversations)}</td>` +
+                    `<td>${formatN(u.messages)}</td>` +
+                    `<td>${formatDate(u.lastSeen)}</td>` +
+                    `<td class="actions"><button class="btn-sm btn-del" data-user-email="${esc(u.email)}">Delete</button></td>`;
                 tbody.appendChild(tr);
             });
         }
 
         function renderProducts(products) {
             const tbody = el("products-body");
-            tbody.innerHTML = products.length ? "" : `<tr><td colspan="5" class="warn">No products found.</td></tr>`;
+            tbody.innerHTML = products.length ? "" : `<tr><td colspan="6" class="warn">No products found.</td></tr>`;
             products.forEach((p) => {
                 const tr = document.createElement("tr");
                 const seller = p.sellerEmail || "-";
@@ -241,7 +263,11 @@
                     `<td><span class="pill">${esc(p.category || "General")}</span></td>` +
                     `<td>${formatMoney(p.price)}</td>` +
                     `<td>${esc(seller)}</td>` +
-                    `<td>${formatDate(p.createdAt)}</td>`;
+                    `<td>${formatDate(p.createdAt)}</td>` +
+                    `<td class="actions">` +
+                        `<button class="btn-sm btn-edit" data-product-id="${esc(p.id)}">Edit</button>` +
+                        `<button class="btn-sm btn-del" data-delete-product-id="${esc(p.id)}">Delete</button>` +
+                    `</td>`;
                 tbody.appendChild(tr);
             });
         }
@@ -324,6 +350,27 @@
             }
         }
 
+        async function deleteAdminUser(email) {
+            if (!email) return;
+            if (!confirm(`Delete user "${email}" and all related data (chats, cart, products)? This cannot be undone.`)) return;
+            const base = el("api-select").value;
+            el("status-line").textContent = "Deleting user…";
+            try {
+                const res = await fetch(`${base}/admin/users/${encodeURIComponent(email)}`, {
+                    method: "DELETE",
+                    headers: adminHeaders()
+                });
+                const json = await res.json().catch(() => ({}));
+                if (!res.ok || json.status !== "success") {
+                    throw new Error(json.error || json.message || `HTTP ${res.status}`);
+                }
+                el("status-line").textContent = `User deleted. Removed ${json.deletedProducts || 0} products.`;
+                await loadDashboard();
+            } catch (err) {
+                el("status-line").textContent = `Delete user failed: ${err.message}`;
+            }
+        }
+
         function renderActivity(activity) {
             const list = el("activity-list");
             list.innerHTML = "";
@@ -387,6 +434,27 @@
 
         el("refresh-btn").addEventListener("click", loadDashboard);
 
+        el("users-body").addEventListener("click", async (e) => {
+            const btn = e.target.closest("button[data-user-email]");
+            if (!btn) return;
+            await deleteAdminUser(btn.dataset.userEmail || "");
+        });
+
+        el("products-body").addEventListener("click", async (e) => {
+            const editBtn = e.target.closest("button[data-product-id]");
+            if (editBtn) {
+                const product = (state.data?.products || []).find((p) => p.id === editBtn.dataset.productId);
+                if (product) openProductModal(product);
+                return;
+            }
+
+            const deleteBtn = e.target.closest("button[data-delete-product-id]");
+            if (deleteBtn) {
+                const product = (state.data?.products || []).find((p) => p.id === deleteBtn.dataset.deleteProductId);
+                if (product) await deleteAdminProduct(product);
+            }
+        });
+
         async function broadcastPush(type, payloadOverride = null) {
             const base = el("api-select").value;
             el("status-line").textContent = "Sending push…";
@@ -441,6 +509,7 @@
             });
         }
 
+        el("admin-key").value = localStorage.getItem("myfarmai_admin_key") || "";
         loadDashboard();
     </script>
 </body>
