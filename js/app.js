@@ -226,6 +226,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (notifBtn) notifBtn.classList.remove('d-none');
 });
 
+function hideAppLoader() {
+    const loader = document.getElementById('app-loader');
+    if (!loader) return;
+    loader.classList.add('hidden');
+    setTimeout(() => loader.remove(), 450);
+}
+
+window.addEventListener('load', hideAppLoader);
+setTimeout(hideAppLoader, 2200);
+
 function updateHeaderLayoutOffset() {
     const header = document.querySelector('.header');
     if (!header) return;

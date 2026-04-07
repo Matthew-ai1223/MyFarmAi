@@ -60,6 +60,72 @@ body {
     padding-bottom: 90px; /* Space for bottom nav */
 }
 
+.app-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 2500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: rgba(248, 250, 252, 0.96);
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+.app-loader.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.app-loader__spinner {
+    position: relative;
+    width: 108px;
+    height: 108px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-loader__ring {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 0deg,
+        rgba(16, 185, 129, 0.05) 0deg,
+        rgba(16, 185, 129, 0.18) 100deg,
+        rgba(16, 185, 129, 0.85) 240deg,
+        rgba(16, 185, 129, 0.05) 360deg
+    );
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 8px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 8px));
+    animation: app-loader-spin 1s linear infinite;
+}
+
+.app-loader__logo {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.app-loader__text {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.01em;
+}
+
+@keyframes app-loader-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 a {
     text-decoration: none;
     color: inherit;
