@@ -945,10 +945,10 @@ window.toggleAuthMode = function () {
 
 window.handleAuthSubmit = async function (e) {
     e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value; // We don't hash yet for simplicity
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
 
-    const payload = { email };
+    const payload = { email, password, mode: state.authMode };
 
     if (state.authMode === 'signup') {
         const termsAccept = document.getElementById('terms-accept');
@@ -972,6 +972,11 @@ window.handleAuthSubmit = async function (e) {
             body: JSON.stringify(payload)
         });
         const data = await res.json();
+
+        if (!res.ok) {
+            showToast(data.error || 'Authentication failed. Please try again.', 'error');
+            return;
+        }
 
         if (data.success) {
             state.currentUser = { email: data.email };
