@@ -128,10 +128,31 @@
 
         <!-- HOME SECTION -->
         <section id="home" class="active-section">
-            <div class="hero-card">
-                <h1>Farm Smarter, Not Harder</h1>
-                <p class="hero-text">Experience the future of agriculture with our AI-driven ecosystem. Ask questions,
-                    trade goods, or consult experts seamlessly.</p>
+            <div class="hero-card" role="banner">
+                <div class="hero-card__ambient" aria-hidden="true"></div>
+                <div class="hero-card__inner">
+                    <p class="hero-card__eyebrow">
+                        <span class="hero-card__eyebrow-dot" aria-hidden="true"></span>
+                        AI guidance · Trade · Veterinary care
+                    </p>
+                    <h1 class="hero-card__headline">
+                        Farm smarter,<br>
+                        <span class="hero-card__headline-accent">not harder</span>
+                    </h1>
+                    <p class="hero-text">Practical answers for crops and livestock, a direct marketplace for inputs and
+                        produce, and access to certified vets—one calm, fast experience built for working farms.</p>
+                    <ul class="hero-card__stats" aria-label="What you get">
+                        <li><strong>Instant</strong> AI answers</li>
+                        <li><strong>Trusted</strong> peer trade</li>
+                        <li><strong>Live</strong> vet consults</li>
+                    </ul>
+                    <div class="hero-card__actions">
+                        <button type="button" class="hero-card__btn hero-card__btn--primary"
+                            onclick="showSection('ai-chat'); return false;">Open AI Assistant</button>
+                        <button type="button" class="hero-card__btn hero-card__btn--ghost"
+                            onclick="showSection('market'); return false;">Browse marketplace</button>
+                    </div>
+                </div>
             </div>
 
             <div class="feature-card" onclick="showSection('ai-chat')">
