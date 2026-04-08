@@ -1158,6 +1158,141 @@ function updateAuthUI() {
     requestAnimationFrame(() => updateHeaderLayoutOffset());
 }
 
+// Profile
+function getStoredUser() {
+    try {
+        return JSON.parse(localStorage.getItem('myfarmai_user')) || null;
+    } catch (_) {
+        return null;
+    }
+}
+
+function persistCurrentUser() {
+    if (!state.currentUser) return;
+    localStorage.setItem('myfarmai_user', JSON.stringify(state.currentUser));
+}
+
+function populateProfileForm() {
+    const guard = document.getElementById('profile-guard');
+    const form = document.getElementById('profile-form');
+    const emailEl = document.getElementById('profile-email');
+    const nameEl = document.getElementById('profile-name');
+    const phoneEl = document.getElementById('profile-phone');
+    const locEl = document.getElementById('profile-location');
+    const focusEl = document.getElementById('profile-focus');
+    const consentEl = document.getElementById('profile-ai-consent');
+    const statusEl = document.getElementById('profile-status');
+
+    if (statusEl) statusEl.textContent = '';
+
+    if (!state.currentUser) {
+        if (guard) guard.classList.remove('d-none');
+        if (form) form.classList.add('d-none');
+        return;
+    }
+
+    if (guard) guard.classList.add('d-none');
+    if (form) form.classList.remove('d-none');
+
+    const u = state.currentUser;
+    const p = u.profile || {};
+    if (emailEl) emailEl.value = u.email || '';
+    if (nameEl) nameEl.value = p.name || '';
+    if (phoneEl) phoneEl.value = p.phone || '';
+    if (locEl) locEl.value = p.location || '';
+    if (focusEl) focusEl.value = p.focus || '';
+    if (consentEl) consentEl.checked = u.aiDataConsent === 'yes';
+}
+
+window.openProfile = function () {
+    if (!state.currentUser) {
+        showSection('auth');
+        return;
+    }
+    showSection('profile');
+    populateProfileForm();
+};
+
+window.resetProfileForm = function () {
+    // Re-load from storage in case state was mutated without persistence
+    const stored = getStoredUser();
+    if (stored) state.currentUser = stored;
+    populateProfileForm();
+    showToast('Profile reset.', 'info');
+};
+
+window.handleProfileSave = function (e) {
+    e.preventDefault();
+    if (!state.currentUser) {
+        showToast('Please sign in first.', 'error');
+        showSection('auth');
+        return;
+    }
+
+    const name = document.getElementById('profile-name')?.value?.trim() || '';
+    const phone = document.getElementById('profile-phone')?.value?.trim() || '';
+    const location = document.getElementById('profile-location')?.value?.trim() || '';
+    const focus = document.getElementById('profile-focus')?.value || '';
+    const consentChecked = Boolean(document.getElementById('profile-ai-consent')?.checked);
+
+    state.currentUser.profile = {
+        name,
+        phone,
+        location,
+        focus
+    };
+    state.currentUser.aiDataConsent = consentChecked ? 'yes' : 'no';
+    persistCurrentUser();
+    updateAuthUI();
+    syncUserToAI(); // keep iframe in sync if open
+
+    const statusEl = document.getElementById('profile-status');
+    if (statusEl) statusEl.textContent = 'Saved.';
+    showToast('Profile saved.', 'success');
+};
+
+window.handleDeleteAccount = async function () {
+    if (!state.currentUser) {
+        showToast('You are not signed in.', 'info');
+        return;
+    }
+
+    const email = state.currentUser.email || '';
+    const confirmText = prompt(`Type DELETE to permanently delete account for ${email}.`);
+    if (confirmText !== 'DELETE') {
+        showToast('Account deletion cancelled.', 'info');
+        return;
+    }
+
+    // Best-effort server deletion (if endpoint exists)
+    try {
+        const res = await fetch(`${API_BASE}/auth/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        // If server doesn't support it, ignore and still clean locally
+        if (res.ok) {
+            const data = await res.json().catch(() => ({}));
+            if (data.status === 'success' || data.success === true) {
+                // ok
+            }
+        }
+    } catch (_) {
+        // ignore network errors; still delete locally
+    }
+
+    // Local removal + sign out
+    state.currentUser = null;
+    localStorage.removeItem('myfarmai_user');
+    state.cart = [];
+    updateAuthUI();
+    syncUserToAI(true);
+    renderCart();
+    showSection('home');
+    showToast('Account deleted on this device.', 'success');
+};
+
 // Cart Logic
 window.toggleCart = function () {
     const panel = document.getElementById('cart-panel');

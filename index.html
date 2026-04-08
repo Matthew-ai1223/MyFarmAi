@@ -110,6 +110,7 @@
                     <span class="user-chip__label">Signed in</span>
                     <span id="user-email-header" class="user-chip__email"></span>
                 </div>
+                <button type="button" class="user-chip__logout" onclick="openProfile()" style="margin-left: 0.35rem;">Profile</button>
                 <button type="button" class="user-chip__logout" onclick="handleLogout()">Log out</button>
                 </div>
             </div>
@@ -541,6 +542,92 @@
                         <a href="#" onclick="toggleAuthMode(); return false;" id="auth-toggle-link" style="color: var(--primary); font-weight: 700;">Create Account</a>
                     </p>
                 </form>
+            </div>
+        </section>
+
+        <!-- PROFILE SECTION -->
+        <section id="profile" class="d-none" style="display: flex; justify-content: center; padding-top: 2rem; padding-bottom: 2rem;">
+            <div style="background: var(--bg-surface); padding: 2.25rem 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-hover); max-width: 640px; width: 100%;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.6rem;">Profile</h2>
+                        <p style="margin: 0.35rem 0 0; color: var(--text-muted); font-size: 0.95rem;">Manage your account data and preferences.</p>
+                    </div>
+                    <div style="display:flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-outline" onclick="showSection('home')">Back to Home</button>
+                        <button type="button" class="btn btn-outline" onclick="handleLogout()">Log out</button>
+                    </div>
+                </div>
+
+                <div id="profile-guard" class="d-none" style="padding: 1rem; border-radius: 12px; border: 1px solid rgba(239,68,68,0.35); background: rgba(239,68,68,0.08); color:#b91c1c; font-weight: 700; margin-bottom: 1.25rem;">
+                    You’re not signed in. Please sign in to manage your profile.
+                    <div style="margin-top: 0.75rem;">
+                        <button type="button" class="btn btn-primary" onclick="showSection('auth')">Sign in</button>
+                    </div>
+                </div>
+
+                <form id="profile-form" onsubmit="handleProfileSave(event)" style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="profile-email">Email</label>
+                        <input type="email" id="profile-email" class="input-field" readonly>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+                        <div class="form-group">
+                            <label for="profile-name">Full name <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+                            <input type="text" id="profile-name" class="input-field" placeholder="e.g. Amina Yusuf" maxlength="60" autocomplete="name">
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-phone">Phone / WhatsApp <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+                            <input type="tel" id="profile-phone" class="input-field" placeholder="+234…" autocomplete="tel">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+                        <div class="form-group">
+                            <label for="profile-location">Farm location <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+                            <input type="text" id="profile-location" class="input-field" placeholder="State / City" maxlength="80" autocomplete="address-level1">
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-focus">Farm focus <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+                            <select id="profile-focus" class="input-field" style="appearance: auto;">
+                                <option value="">Select…</option>
+                                <option value="Crops">Crops</option>
+                                <option value="Livestock">Livestock</option>
+                                <option value="Mixed">Mixed</option>
+                                <option value="Agri-business">Agri-business</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 0.25rem;">
+                        <label style="display:flex; align-items:flex-start; gap: 0.6rem; cursor:pointer;">
+                            <input type="checkbox" id="profile-ai-consent" style="margin-top: 0.25rem;">
+                            <span>
+                                <strong>AI improvement consent</strong><br>
+                                <span style="color: var(--text-muted); font-size: 0.9rem;">Allow MyFarmAI to use my chats &amp; related data to improve the AI.</span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div style="display:flex; gap: 0.75rem; flex-wrap: wrap; align-items:center; margin-top: 0.5rem;">
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="button" class="btn btn-outline" onclick="resetProfileForm()">Reset</button>
+                        <span id="profile-status" style="color: var(--text-muted); font-size: 0.9rem;"></span>
+                    </div>
+                </form>
+
+                <hr style="margin: 1.75rem 0; border: none; height: 1px; background: var(--border-soft);">
+
+                <div style="display:grid; gap: 0.75rem;">
+                    <h3 style="margin: 0; font-size: 1.15rem;">Danger zone</h3>
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">
+                        Deleting your account signs you out on this device and removes locally stored profile data. If the server supports it, we’ll also request permanent deletion.
+                    </p>
+                    <button type="button" class="btn btn-outline" onclick="handleDeleteAccount()" style="color:#ef4444; border-color: rgba(239,68,68,0.45); width: fit-content;">
+                        Delete my account
+                    </button>
+                </div>
             </div>
         </section>
 
