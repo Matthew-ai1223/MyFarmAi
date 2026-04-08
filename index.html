@@ -148,41 +148,109 @@
                                     onclick="showSection('market'); return false;">Browse marketplace</button>
                             </div> -->
                         </div>
-                        <figure class="hero-card__illustration">
-                            <svg class="hero-card__illustration-svg" viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="hero-illustration-title">
-                                <title id="hero-illustration-title">Stylized farm landscape with fields, barn, and sun</title>
-                                <defs>
-                                    <linearGradient id="hero-ill-sky" x1="0%" y1="0%" x2="0%" y2="100%">
-                                        <stop offset="0%" stop-color="rgba(255,255,255,0.35)" />
-                                        <stop offset="100%" stop-color="rgba(255,255,255,0.02)" />
-                                    </linearGradient>
-                                    <linearGradient id="hero-ill-hill" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stop-color="rgba(255,255,255,0.14)" />
-                                        <stop offset="100%" stop-color="rgba(255,255,255,0.06)" />
-                                    </linearGradient>
-                                </defs>
-                                <rect width="400" height="140" fill="url(#hero-ill-sky)" rx="12" />
-                                <circle cx="318" cy="52" r="32" fill="rgba(254,243,199,0.45)" />
-                                <circle cx="318" cy="52" r="22" fill="rgba(251,191,36,0.55)" />
-                                <path d="M0 200 Q80 165 160 178 T320 172 Q360 168 400 182 L400 280 L0 280 Z" fill="url(#hero-ill-hill)" />
-                                <path d="M0 215 Q120 195 240 208 T400 198 L400 280 L0 280 Z" fill="rgba(6,78,59,0.35)" />
-                                <g fill="rgba(255,255,255,0.2)">
-                                    <ellipse cx="72" cy="228" rx="38" ry="8" />
-                                    <ellipse cx="200" cy="238" rx="42" ry="9" />
-                                    <ellipse cx="312" cy="232" rx="36" ry="7" />
-                                </g>
-                                <path d="M268 168 L268 128 L298 148 L268 168 Z" fill="rgba(255,255,255,0.85)" />
-                                <rect x="252" y="148" width="36" height="52" rx="3" fill="rgba(255,255,255,0.92)" />
-                                <rect x="258" y="156" width="10" height="10" rx="1" fill="rgba(6,78,59,0.35)" />
-                                <rect x="272" y="156" width="10" height="10" rx="1" fill="rgba(6,78,59,0.35)" />
-                                <path d="M248 200 L292 200 L292 204 L248 204 Z" fill="rgba(255,255,255,0.5)" />
-                                <g stroke="rgba(255,255,255,0.35)" stroke-width="2" stroke-linecap="round" fill="none">
-                                    <path d="M48 210 L48 248 M32 230 L64 230" />
-                                    <path d="M128 218 L128 252 M114 236 L142 236" />
-                                </g>
-                                <circle cx="48" cy="210" r="6" fill="rgba(16,185,129,0.9)" />
-                                <circle cx="128" cy="218" r="5" fill="rgba(52,211,153,0.95)" />
-                            </svg>
+                        <figure class="hero-card__illustration" aria-hidden="true">
+                            <div class="hero-illustration-rotator">
+                                <!-- Panel 1: Farm -->
+                                <svg class="hero-card__illustration-svg hero-ill hero-ill--1" viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                                    <defs>
+                                        <linearGradient id="hero1-sky" x1="0%" y1="0%" x2="0%" y2="100%">
+                                            <stop offset="0%" stop-color="rgba(255,255,255,0.35)" />
+                                            <stop offset="100%" stop-color="rgba(255,255,255,0.02)" />
+                                        </linearGradient>
+                                        <linearGradient id="hero1-hill" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stop-color="rgba(255,255,255,0.14)" />
+                                            <stop offset="100%" stop-color="rgba(255,255,255,0.06)" />
+                                        </linearGradient>
+                                    </defs>
+                                    <rect width="400" height="280" rx="14" fill="rgba(255,255,255,0.06)" />
+                                    <rect x="16" y="16" width="368" height="124" rx="12" fill="url(#hero1-sky)" />
+                                    <circle cx="322" cy="54" r="30" fill="rgba(254,243,199,0.45)" />
+                                    <circle cx="322" cy="54" r="20" fill="rgba(251,191,36,0.55)" />
+                                    <path d="M16 188 Q96 152 176 166 T336 160 Q360 158 384 170 L384 264 L16 264 Z" fill="url(#hero1-hill)" />
+                                    <path d="M16 202 Q120 184 224 196 T384 188 L384 264 L16 264 Z" fill="rgba(6,78,59,0.35)" />
+                                    <g opacity="0.45" stroke="rgba(255,255,255,0.25)" stroke-width="3" stroke-linecap="round">
+                                        <path d="M46 236 C78 220, 110 220, 142 236" />
+                                        <path d="M150 244 C182 228, 214 228, 246 244" />
+                                        <path d="M254 236 C286 220, 318 220, 350 236" />
+                                    </g>
+                                    <path d="M270 168 L270 128 L300 148 L270 168 Z" fill="rgba(255,255,255,0.85)" />
+                                    <rect x="254" y="148" width="38" height="52" rx="4" fill="rgba(255,255,255,0.92)" />
+                                    <rect x="260" y="156" width="11" height="11" rx="2" fill="rgba(6,78,59,0.35)" />
+                                    <rect x="276" y="156" width="11" height="11" rx="2" fill="rgba(6,78,59,0.35)" />
+                                    <rect x="268" y="174" width="10" height="26" rx="2" fill="rgba(6,78,59,0.35)" />
+                                    <g fill="rgba(16,185,129,0.9)">
+                                        <circle cx="64" cy="208" r="6" />
+                                        <circle cx="128" cy="214" r="5" />
+                                        <circle cx="104" cy="226" r="4.5" />
+                                    </g>
+                                </svg>
+
+                                <!-- Panel 2: Agriculture -->
+                                <svg class="hero-card__illustration-svg hero-ill hero-ill--2" viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                                    <defs>
+                                        <linearGradient id="hero2-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="rgba(255,255,255,0.20)" />
+                                            <stop offset="100%" stop-color="rgba(255,255,255,0.04)" />
+                                        </linearGradient>
+                                    </defs>
+                                    <rect width="400" height="280" rx="14" fill="rgba(255,255,255,0.06)" />
+                                    <rect x="16" y="16" width="368" height="248" rx="12" fill="url(#hero2-bg)" />
+                                    <g opacity="0.5" stroke="rgba(255,255,255,0.25)" stroke-width="4" stroke-linecap="round">
+                                        <path d="M40 208 C92 170, 144 170, 196 208" />
+                                        <path d="M64 232 C116 194, 168 194, 220 232" />
+                                        <path d="M188 208 C240 170, 292 170, 344 208" />
+                                        <path d="M212 232 C264 194, 316 194, 368 232" />
+                                    </g>
+                                    <circle cx="292" cy="84" r="22" fill="rgba(251,191,36,0.35)" />
+                                    <path d="M278 84 C282 72, 302 72, 306 84 C302 96, 282 96, 278 84 Z" fill="rgba(255,255,255,0.85)" />
+                                    <path d="M292 98 C286 110, 274 118, 260 122" stroke="rgba(255,255,255,0.55)" stroke-width="3" stroke-linecap="round" fill="none"/>
+                                    <g fill="rgba(255,255,255,0.92)">
+                                        <rect x="86" y="156" width="126" height="44" rx="10" />
+                                        <rect x="160" y="172" width="58" height="20" rx="10" />
+                                        <circle cx="114" cy="204" r="16" fill="rgba(6,78,59,0.25)" />
+                                        <circle cx="192" cy="204" r="16" fill="rgba(6,78,59,0.25)" />
+                                    </g>
+                                    <g fill="rgba(6,78,59,0.35)">
+                                        <rect x="102" y="168" width="36" height="14" rx="7" />
+                                        <rect x="144" y="168" width="48" height="14" rx="7" />
+                                    </g>
+                                </svg>
+
+                                <!-- Panel 3: AI -->
+                                <svg class="hero-card__illustration-svg hero-ill hero-ill--3" viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                                    <defs>
+                                        <linearGradient id="hero3-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+                                            <stop offset="0%" stop-color="rgba(255,255,255,0.22)" />
+                                            <stop offset="100%" stop-color="rgba(255,255,255,0.04)" />
+                                        </linearGradient>
+                                    </defs>
+                                    <rect width="400" height="280" rx="14" fill="rgba(255,255,255,0.06)" />
+                                    <rect x="16" y="16" width="368" height="248" rx="12" fill="url(#hero3-bg)" />
+                                    <g opacity="0.55" fill="none" stroke="rgba(255,255,255,0.30)" stroke-width="2" stroke-linecap="round">
+                                        <path d="M70 92 L148 66 L228 98 L308 76" />
+                                        <path d="M90 174 L168 142 L248 182 L326 150" />
+                                        <path d="M148 66 L168 142" />
+                                        <path d="M228 98 L248 182" />
+                                    </g>
+                                    <g fill="rgba(255,255,255,0.9)">
+                                        <circle cx="70" cy="92" r="7" />
+                                        <circle cx="148" cy="66" r="7" />
+                                        <circle cx="228" cy="98" r="7" />
+                                        <circle cx="308" cy="76" r="7" />
+                                        <circle cx="90" cy="174" r="7" />
+                                        <circle cx="168" cy="142" r="7" />
+                                        <circle cx="248" cy="182" r="7" />
+                                        <circle cx="326" cy="150" r="7" />
+                                    </g>
+                                    <path d="M104 186 C104 156, 140 134, 188 134 H244 C286 134, 318 154, 318 182 C318 210, 292 232, 256 238 L216 254 L222 238 H188 C140 238, 104 220, 104 186 Z" fill="rgba(255,255,255,0.92)" />
+                                    <g fill="rgba(6,78,59,0.35)">
+                                        <rect x="140" y="172" width="144" height="10" rx="5" />
+                                        <rect x="140" y="190" width="112" height="10" rx="5" />
+                                    </g>
+                                    <circle cx="126" cy="154" r="9" fill="rgba(16,185,129,0.9)" />
+                                    <path d="M126 154 C150 130, 178 116, 210 110" opacity="0.55" fill="none" stroke="rgba(16,185,129,0.55)" stroke-width="2" stroke-linecap="round" />
+                                </svg>
+                            </div>
                         </figure>
                     </div>
                 </div>
