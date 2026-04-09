@@ -1591,6 +1591,30 @@ window.handleCheckout = function () {
     openModal('checkout-modal');
 };
 
+function setCheckoutSubmitting(isSubmitting, statusText = '') {
+    const btn = document.getElementById('checkout-submit-btn');
+    const phoneInput = document.getElementById('checkout-phone');
+    const notesInput = document.getElementById('checkout-notes');
+    const deliveryInput = document.getElementById('checkout-delivery-option');
+
+    if (phoneInput) phoneInput.disabled = Boolean(isSubmitting);
+    if (notesInput) notesInput.disabled = Boolean(isSubmitting);
+    if (deliveryInput) deliveryInput.disabled = Boolean(isSubmitting);
+
+    if (!btn) return;
+    if (!btn.dataset.defaultText) btn.dataset.defaultText = btn.textContent || 'Pay with Paystack';
+
+    if (isSubmitting) {
+        btn.disabled = true;
+        btn.classList.add('is-loading');
+        btn.innerHTML = `<span class="btn-spinner" aria-hidden="true"></span><span>${statusText || 'Processing...'}</span>`;
+    } else {
+        btn.disabled = false;
+        btn.classList.remove('is-loading');
+        btn.textContent = btn.dataset.defaultText;
+    }
+}
+
 window.submitCheckout = async function (e) {
     e.preventDefault();
     if (!state.currentUser) return;
@@ -1598,11 +1622,14 @@ window.submitCheckout = async function (e) {
     const phone = document.getElementById('checkout-phone').value.trim();
     const notes = document.getElementById('checkout-notes').value.trim();
     const deliveryOption = document.getElementById('checkout-delivery-option')?.value || 'seller_delivery';
-    const btn = document.getElementById('checkout-submit-btn');
-    const originalBtnText = btn ? btn.textContent : '';
-    if (btn) btn.disabled = true;
+    if (!phone || phone.length < 8) {
+        showToast('Please enter a valid phone number before payment.', 'error');
+        return;
+    }
 
     try {
+        setCheckoutSubmitting(true, 'Initializing payment...');
+        showToast('Preparing secure checkout...', 'info');
         const initRes = await fetch(`${API_BASE}/checkout/initialize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1623,6 +1650,7 @@ window.submitCheckout = async function (e) {
             throw new Error('Paystack checkout is unavailable at the moment.');
         }
 
+        setCheckoutSubmitting(true, 'Open payment window...');
         await new Promise((resolve, reject) => {
             const handler = window.PaystackPop.setup({
                 key: paystack.publicKey,
@@ -1631,6 +1659,8 @@ window.submitCheckout = async function (e) {
                 ref: paystack.reference,
                 callback: async function (response) {
                     try {
+                        setCheckoutSubmitting(true, 'Verifying payment...');
+                        showToast('Payment received. Verifying transaction...', 'info');
                         const verifyRes = await fetch(`${API_BASE}/checkout/verify`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -1664,10 +1694,7 @@ window.submitCheckout = async function (e) {
     } catch (err) {
         showToast(err.message || 'Could not place order.', 'error');
     } finally {
-        if (btn) {
-            btn.disabled = false;
-            if (originalBtnText) btn.textContent = originalBtnText;
-        }
+        setCheckoutSubmitting(false);
     }
 };
 
