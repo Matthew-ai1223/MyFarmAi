@@ -1645,8 +1645,10 @@ window.submitCheckout = async function (e) {
                         const orderId = verifyData.data?.orderId || '';
                         const deliveryLabel = verifyData.data?.sellerGuidance?.selectedDeliveryLabel || 'Seller delivers to buyer';
                         const payoutNote = verifyData.data?.sellerGuidance?.payout || 'Seller payout follows delivery confirmation.';
+                        const sellerUpdates = Array.isArray(verifyData.data?.sellerUpdates) ? verifyData.data.sellerUpdates : [];
                         showToast(orderId ? `Payment successful. Order ${orderId.slice(0, 8)} confirmed.` : 'Payment successful.', 'success');
                         showToast(`Delivery: ${deliveryLabel}. ${payoutNote}`, 'info');
+                        notifySellersOnWhatsApp(sellerUpdates);
                         await syncCart();
                         resolve();
                     } catch (err) {
@@ -1695,6 +1697,27 @@ function showToast(message, type = 'success') {
             toast.remove();
         }, 300);
     }, 3000);
+}
+
+function normalizePhoneForWhatsApp(phone) {
+    return String(phone || '').replace(/\D/g, '');
+}
+
+function notifySellersOnWhatsApp(updates) {
+    const list = Array.isArray(updates) ? updates : [];
+    const valid = list.filter((u) => normalizePhoneForWhatsApp(u.sellerPhone));
+    if (!valid.length) return;
+
+    const proceed = window.confirm(
+        `Notify ${valid.length} seller(s) now with payment and delivery update?`
+    );
+    if (!proceed) return;
+
+    valid.forEach((u) => {
+        const waPhone = normalizePhoneForWhatsApp(u.sellerPhone);
+        const msg = encodeURIComponent(u.message || 'Payment confirmed. Please proceed with delivery.');
+        window.open(`https://wa.me/${waPhone}?text=${msg}`, '_blank', 'noopener');
+    });
 }
 
 // Export for use in other parts
