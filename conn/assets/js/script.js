@@ -178,15 +178,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.status === 'success') {
-                alert('Appointment booked successfully! We are redirecting you to notify the specialist via WhatsApp.');
+                const notified = Boolean(data.data && data.data.consultantEmailSent);
+                alert(
+                    notified
+                        ? 'Appointment booked successfully! The consultant has been notified by email.'
+                        : 'Appointment booked successfully! Your request has been saved.'
+                );
                 closeModal();
-
-                // Redirect to WhatsApp if provided
-                if (data.whatsapp_url) {
-                    setTimeout(() => {
-                        window.open(data.whatsapp_url, '_blank');
-                    }, 500);
-                }
             } else {
                 alert(data.message || 'Booking failed');
             }

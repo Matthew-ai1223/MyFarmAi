@@ -1166,10 +1166,48 @@ window.handleAuthSubmit = async function (e) {
         const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
+            if (data.code === 'EMAIL_NOT_VERIFIED') {
+                const resend = window.confirm('Your email is not verified yet. Send a new verification code now?');
+                if (resend) {
+                    try {
+                        await fetch(`${API_BASE}/auth/resend-verification`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email })
+                        });
+                    } catch (_) {
+                        // ignore resend failures here
+                    }
+                }
+            }
             const message = data.error || data.message || 'Authentication failed. Please try again.';
             setAuthError(message);
             showToast(message, 'error');
             return;
+        }
+
+        if (data.requiresVerification) {
+            const code = window.prompt('Enter the 6-digit verification code sent to your email:');
+            if (!code) {
+                setAuthError('Verification is required to complete registration.');
+                showToast('Verification cancelled. Please verify your email to continue.', 'info');
+                return;
+            }
+
+            const verifyRes = await fetch(`${API_BASE}/auth/verify-email`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, code: String(code).trim() })
+            });
+            const verifyData = await verifyRes.json().catch(() => ({}));
+            if (!verifyRes.ok || verifyData.status !== 'success') {
+                const verifyMsg = verifyData.error || verifyData.message || 'Email verification failed.';
+                setAuthError(verifyMsg);
+                showToast(verifyMsg, 'error');
+                return;
+            }
+            showToast('Email verified successfully. Welcome!', 'success');
+            data.email = verifyData.email || email;
         }
 
         if (data.success) {
@@ -1675,10 +1713,12 @@ window.submitCheckout = async function (e) {
                         const orderId = verifyData.data?.orderId || '';
                         const deliveryLabel = verifyData.data?.sellerGuidance?.selectedDeliveryLabel || 'Seller delivers to buyer';
                         const payoutNote = verifyData.data?.sellerGuidance?.payout || 'Seller payout follows delivery confirmation.';
-                        const sellerUpdates = Array.isArray(verifyData.data?.sellerUpdates) ? verifyData.data.sellerUpdates : [];
+                        const sellerEmailSent = Number(verifyData.data?.sellerEmailNotifications?.sent || 0);
                         showToast(orderId ? `Payment successful. Order ${orderId.slice(0, 8)} confirmed.` : 'Payment successful.', 'success');
                         showToast(`Delivery: ${deliveryLabel}. ${payoutNote}`, 'info');
-                        notifySellersOnWhatsApp(sellerUpdates);
+                        if (sellerEmailSent > 0) {
+                            showToast(`Seller email notifications sent: ${sellerEmailSent}.`, 'success');
+                        }
                         await syncCart();
                         resolve();
                     } catch (err) {
@@ -1724,27 +1764,6 @@ function showToast(message, type = 'success') {
             toast.remove();
         }, 300);
     }, 3000);
-}
-
-function normalizePhoneForWhatsApp(phone) {
-    return String(phone || '').replace(/\D/g, '');
-}
-
-function notifySellersOnWhatsApp(updates) {
-    const list = Array.isArray(updates) ? updates : [];
-    const valid = list.filter((u) => normalizePhoneForWhatsApp(u.sellerPhone));
-    if (!valid.length) return;
-
-    const proceed = window.confirm(
-        `Notify ${valid.length} seller(s) now with payment and delivery update?`
-    );
-    if (!proceed) return;
-
-    valid.forEach((u) => {
-        const waPhone = normalizePhoneForWhatsApp(u.sellerPhone);
-        const msg = encodeURIComponent(u.message || 'Payment confirmed. Please proceed with delivery.');
-        window.open(`https://wa.me/${waPhone}?text=${msg}`, '_blank', 'noopener');
-    });
 }
 
 // Export for use in other parts
