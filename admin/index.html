@@ -144,6 +144,29 @@
             grid-column: span 2;
         }
 
+        /* Spinner & Status Styles */
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .status-msg {
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .status-msg.error { color: #ef4444 !important; }
+        .status-msg.success { color: #10b981 !important; }
+        .status-msg.loading { color: var(--text-muted); }
+
         .admin-url-row {
             display: flex;
             gap: 10px;
@@ -652,12 +675,23 @@
 
         async function fetchOverview() {
             const base = el("api-select").value;
-            el("status-line").textContent = "Loading admin data...";
-            const res = await fetch(`${base}/admin/overview`);
-            if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
-            const json = await res.json();
-            if (json.status !== "success") throw new Error(json.message || "Unknown server error");
-            return json;
+            const status = el("status-line");
+            status.className = "status-msg loading";
+            status.textContent = "Loading admin data...";
+            try {
+                // Try to include key for overview if possible
+                let headers = {};
+                try { headers = adminHeaders(); } catch(e) {}
+                
+                const res = await fetch(`${base}/admin/overview`, { headers });
+                if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+                const json = await res.json();
+                if (json.status !== "success") throw new Error(json.message || "Unknown server error");
+                return json;
+            } catch (err) {
+                status.className = "status-msg error";
+                throw err;
+            }
         }
 
         function renderMetrics(summary) {
@@ -791,69 +825,79 @@
         async function runDeleteAction(lockKey, button, action) {
             if (deleteLocks.has(lockKey)) return;
             deleteLocks.add(lockKey);
-            const previousText = button ? button.textContent : "";
+            const status = el("status-line");
+            const previousText = button ? button.innerHTML : "Delete";
             if (button) {
                 button.disabled = true;
-                button.textContent = "Deleting...";
+                button.innerHTML = `<span class="spinner"></span>Deleting...`;
             }
             try {
+                status.className = "status-msg loading";
                 await action();
             } finally {
                 deleteLocks.delete(lockKey);
                 if (button) {
                     button.disabled = false;
-                    button.textContent = previousText || "Delete";
+                    button.innerHTML = previousText;
                 }
             }
         }
 
         async function deleteAdminProductById(productId, productTitle, button = null) {
             const id = String(productId || "").trim();
+            const status = el("status-line");
             if (!id) {
-                el("status-line").textContent = "Delete failed: missing product id.";
+                status.className = "status-msg error";
+                status.textContent = "Delete failed: missing product id.";
                 return;
             }
             if (!confirm(`Delete listing "${productTitle || id}"? This cannot be undone.`)) return;
             await runDeleteAction(`product:${id}`, button, async () => {
                 const base = el("api-select").value;
-                el("status-line").textContent = "Deleting product…";
+                status.textContent = "Deleting product…";
                 const res = await fetch(`${base}/admin/products/${encodeURIComponent(id)}`, {
                     method: "DELETE",
                     headers: adminHeaders()
                 });
                 const json = await res.json().catch(() => ({}));
                 if (!res.ok || json.status !== "success") {
-                    throw new Error(json.error || json.message || `HTTP ${res.status}`);
+                    throw new Error(json.error || json.message || json.status || `HTTP ${res.status}`);
                 }
-                el("status-line").textContent = "Product deleted.";
+                status.className = "status-msg success";
+                status.textContent = "Product deleted.";
                 await loadDashboard();
             }).catch((err) => {
-                el("status-line").textContent = `Delete failed: ${err.message}`;
+                status.className = "status-msg error";
+                status.textContent = `Delete failed: ${err.message}`;
             });
         }
 
         async function deleteAdminUserByEmail(emailValue, button = null) {
             const email = String(emailValue || "").trim();
+            const status = el("status-line");
             if (!email) {
-                el("status-line").textContent = "Delete failed: missing user email.";
+                status.className = "status-msg error";
+                status.textContent = "Delete failed: missing user email.";
                 return;
             }
             if (!confirm(`Delete user "${email}" and all related data (chats, cart, products)? This cannot be undone.`)) return;
             await runDeleteAction(`user:${email.toLowerCase()}`, button, async () => {
                 const base = el("api-select").value;
-                el("status-line").textContent = "Deleting user…";
+                status.textContent = "Deleting user…";
                 const res = await fetch(`${base}/admin/users/${encodeURIComponent(email)}`, {
                     method: "DELETE",
                     headers: adminHeaders()
                 });
                 const json = await res.json().catch(() => ({}));
                 if (!res.ok || json.status !== "success") {
-                    throw new Error(json.error || json.message || `HTTP ${res.status}`);
+                    throw new Error(json.error || json.message || json.status || `HTTP ${res.status}`);
                 }
-                el("status-line").textContent = json.message || "User and related data deleted.";
+                status.className = "status-msg success";
+                status.textContent = json.message || "User and related data deleted perfectly.";
                 await loadDashboard();
             }).catch((err) => {
-                el("status-line").textContent = `Delete user failed: ${err.message}`;
+                status.className = "status-msg error";
+                status.textContent = `Delete user failed: ${err.message}`;
             });
         }
 
@@ -916,8 +960,10 @@
                 renderOrders(data.orders || []);
                 renderActivity(data.activity || []);
                 renderChatUsers(data.chats || {});
+                el("status-line").className = "status-msg success";
                 el("status-line").textContent = `Updated ${new Date().toLocaleTimeString()} - marketplace value: ${formatMoney(data.summary.marketplaceValue)}`;
             } catch (err) {
+                el("status-line").className = "status-msg error";
                 el("status-line").textContent = `Failed to load admin data: ${err.message}`;
             }
         }
