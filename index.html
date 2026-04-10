@@ -786,6 +786,21 @@
         </div>
     </div>
 
+    <!-- Verification Modal -->
+    <div id="verify-modal" class="modal-backdrop" role="dialog" aria-labelledby="verify-modal-title">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <h3 id="verify-modal-title" style="margin-bottom: 1rem; font-size: 1.5rem;">Verify Your Email</h3>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">Enter the 6-digit verification code sent to your email.</p>
+            <form id="verify-form" onsubmit="submitVerification(event)">
+                <input type="text" id="verify-code-input" class="input-field" placeholder="123456" required autocomplete="one-time-code" maxlength="6" style="text-align: center; font-size: 1.25rem; letter-spacing: 0.15em; margin-bottom: 1.5rem;">
+                <div style="display: flex; gap: 0.75rem;">
+                    <button type="button" class="btn btn-outline" style="flex: 1;" onclick="cancelVerification()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Verify</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- PWA install modal: re-shows on each page load after “Maybe Later” (see js/app.js). -->
     <div id="install-popup" class="modal-backdrop">
         <div class="modal-content" style="text-align: center;">

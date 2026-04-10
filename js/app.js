@@ -1187,7 +1187,7 @@ window.handleAuthSubmit = async function (e) {
         }
 
         if (data.requiresVerification) {
-            const code = window.prompt('Enter the 6-digit verification code sent to your email:');
+            const code = await requestPinUI();
             if (!code) {
                 setAuthError('Verification is required to complete registration.');
                 showToast('Verification cancelled. Please verify your email to continue.', 'info');
@@ -1885,4 +1885,43 @@ window.addEventListener('pageshow', (event) => {
 // Handle Dismissal (no local/session storage — popup shows again on next open or refresh)
 window.dismissInstall = function () {
     closeModal('install-popup');
+};
+
+// Verification UI logic
+let pendingVerifyResolve = null;
+
+window.requestPinUI = function() {
+    return new Promise(resolve => {
+        pendingVerifyResolve = resolve;
+        const modal = document.getElementById('verify-modal');
+        const input = document.getElementById('verify-code-input');
+        if (modal && input) {
+            modal.classList.add('open');
+            input.value = '';
+            input.focus();
+        } else {
+            resolve(null);
+        }
+    });
+};
+
+window.cancelVerification = function() {
+    const modal = document.getElementById('verify-modal');
+    if (modal) modal.classList.remove('open');
+    if (pendingVerifyResolve) {
+        pendingVerifyResolve(null);
+        pendingVerifyResolve = null;
+    }
+};
+
+window.submitVerification = function(e) {
+    if (e) e.preventDefault();
+    const input = document.getElementById('verify-code-input');
+    const code = input ? input.value.trim() : '';
+    const modal = document.getElementById('verify-modal');
+    if (modal) modal.classList.remove('open');
+    if (pendingVerifyResolve) {
+        pendingVerifyResolve(code);
+        pendingVerifyResolve = null;
+    }
 };
