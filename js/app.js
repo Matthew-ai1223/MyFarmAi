@@ -1938,11 +1938,14 @@ window.openOrders = async function () {
         container.innerHTML = '<p style="text-align:center; color:#b91c1c; padding:2rem 0; font-weight:600;">You must be signed in to view orders.</p>';
         return;
     }
-    
+
     container.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding:2rem 0;">Loading orders...</p>';
-    
+
     try {
         const res = await fetch(`${API_BASE}/orders?email=${encodeURIComponent(state.currentUser.email)}`);
+        if (!res.ok) {
+            throw new Error(`Server error ${res.status}: ${res.statusText}`);
+        }
         const json = await res.json().catch(() => ({}));
         if (!res.ok || json.status !== 'success') throw new Error(json.error || 'Failed to load orders');
         
@@ -1958,30 +1961,30 @@ window.openOrders = async function () {
         let html = '<div style="display:grid; gap:1.25rem;">';
         orders.forEach(o => {
             const date = new Date(o.createdAt).toLocaleDateString();
-            const itemsHtml = (o.items || []).map(i => `<div style="font-size:0.9rem;">${esc(i.title)} x${i.quantity || 1}</div>`).join('');
+            const itemsHtml = (o.items || []).map(i => `<div style="font-size:0.9rem;">${escapeHtml(i.title)} x${i.quantity || 1}</div>`).join('');
             const statusColor = o.paymentStatus === 'paid' ? '#10B981' : '#F59E0B';
-            
+
             html += `
             <div style="border: 1px solid var(--border-soft); border-radius: 12px; padding: 1.25rem; background: var(--bg-base);">
                 <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
-                    <span style="font-weight:700;">Order #${esc((o.id || '').slice(0, 8))}</span>
-                    <span style="color:${statusColor}; font-weight:600; font-size:0.9rem; padding:0.2rem 0.5rem; background:rgba(0,0,0,0.05); border-radius:4px;">${esc(o.paymentStatus || 'pending').toUpperCase()}</span>
+                    <span style="font-weight:700;">Order #${escapeHtml((o.id || '').slice(0, 8))}</span>
+                    <span style="color:${statusColor}; font-weight:600; font-size:0.9rem; padding:0.2rem 0.5rem; background:rgba(0,0,0,0.05); border-radius:4px;">${escapeHtml(o.paymentStatus || 'pending').toUpperCase()}</span>
                 </div>
-                <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1rem;">Date: ${date} <br>Delivery: ${esc(o.deliveryOptionLabel || '')}</div>
+                <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1rem;">Date: ${date} <br>Delivery: ${escapeHtml(o.deliveryOptionLabel || '')}</div>
                 <div style="margin-bottom:1rem; border-left: 2px solid var(--border-soft); padding-left:0.75rem;">
                     ${itemsHtml}
                 </div>
                 <div style="display:flex; justify-content:space-between; font-weight:700; border-top: 1px solid var(--border-soft); padding-top:0.75rem;">
                     <span>Total</span>
-                    <span>₦${new Intl.NumberFormat().format(o.total)}</span>
+                    <span>&#8358;${new Intl.NumberFormat().format(o.total)}</span>
                 </div>
             </div>`;
         });
         html += '</div>';
         container.innerHTML = html;
-        
+
     } catch (err) {
-        container.innerHTML = `<p style="text-align:center; color:#b91c1c; padding:2rem 0;">Error loading orders: ${esc(err.message)}</p>`;
+        container.innerHTML = `<p style="text-align:center; color:#b91c1c; padding:2rem 0;">Error loading orders: ${escapeHtml(err.message)}</p>`;
     }
 };
 
