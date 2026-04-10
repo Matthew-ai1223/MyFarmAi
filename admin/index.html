@@ -709,12 +709,20 @@
             tbody.innerHTML = orders.length ? "" : `<tr><td colspan="7" style="color:#b45309;">No orders found.</td></tr>`;
             orders.forEach((o) => {
                 const tr = document.createElement("tr");
+                const sellerPhones = [...new Set((o.items || []).map(i => i.sellerPhone).filter(Boolean))];
+                let sellerContactHtml = "";
+                if (sellerPhones.length > 0) {
+                    const firstPhone = sellerPhones[0].replace(/\D/g, '');
+                    const phoneEsc = esc("+" + firstPhone);
+                    sellerContactHtml = `<br><a href="https://wa.me/${firstPhone}?text=Hi" target="_blank" class="secondary-btn btn-sm" style="display:inline-block; margin-top:5px; color:#10b981; border-color:#10b981;"><i class="fa-brands fa-whatsapp"></i> Chat Seller (${phoneEsc})</a>`;
+                }
+
                 tr.innerHTML =
                     `<td style="font-weight:600;">${esc((o.id || "").slice(0, 8))}</td>` +
                     `<td>${esc(o.buyerEmail || "-")}</td>` +
                     `<td>${formatMoney(o.total)}</td>` +
                     `<td>${esc(o.paymentStatus || "initialized")}</td>` +
-                    `<td>${esc(o.deliveryOptionLabel || "Seller delivers to buyer")}</td>` +
+                    `<td>${esc(o.deliveryOptionLabel || "Seller delivers to buyer")}${sellerContactHtml}</td>` +
                     `<td>${esc(o.payoutNotice || "Seller payout is released after delivery confirmation.")}</td>` +
                     `<td>${formatDate(o.createdAt)}</td>`;
                 tbody.appendChild(tr);

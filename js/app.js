@@ -1263,6 +1263,7 @@ function updateAuthUI() {
     const avatarEl = document.getElementById('user-avatar-initial');
     const mobileAuthLink = document.getElementById('mobile-auth-link');
     const mobileProfileLink = document.getElementById('mobile-profile-link');
+    const mobileOrdersLink = document.getElementById('mobile-orders-link');
     const mobileLogoutLink = document.getElementById('mobile-logout-link');
     const mobileUserInfo = document.getElementById('mobile-user-info');
     const mobileUserEmail = document.getElementById('mobile-user-email');
@@ -1280,6 +1281,7 @@ function updateAuthUI() {
 
         if (mobileAuthLink) mobileAuthLink.classList.add('d-none');
         if (mobileProfileLink) mobileProfileLink.classList.remove('d-none');
+        if (mobileOrdersLink) mobileOrdersLink.classList.remove('d-none');
         if (mobileLogoutLink) mobileLogoutLink.classList.remove('d-none');
         if (mobileUserInfo) mobileUserInfo.classList.remove('d-none');
         if (mobileUserEmail) mobileUserEmail.textContent = state.currentUser.email;
@@ -1293,6 +1295,7 @@ function updateAuthUI() {
 
         if (mobileAuthLink) mobileAuthLink.classList.remove('d-none');
         if (mobileProfileLink) mobileProfileLink.classList.add('d-none');
+        if (mobileOrdersLink) mobileOrdersLink.classList.add('d-none');
         if (mobileLogoutLink) mobileLogoutLink.classList.add('d-none');
         if (mobileUserInfo) mobileUserInfo.classList.add('d-none');
         if (mobileUserEmail) mobileUserEmail.textContent = '';
@@ -1927,3 +1930,58 @@ window.submitVerification = function(e) {
         pendingVerifyResolve = null;
     }
 };
+
+window.openOrders = async function () {
+    showSection('my-orders');
+    const container = document.getElementById('orders-list-container');
+    if (!state.currentUser) {
+        container.innerHTML = '<p style="text-align:center; color:#b91c1c; padding:2rem 0; font-weight:600;">You must be signed in to view orders.</p>';
+        return;
+    }
+    
+    container.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding:2rem 0;">Loading orders...</p>';
+    
+    try {
+        const res = await fetch(`${API_BASE}/orders?email=${encodeURIComponent(state.currentUser.email)}`);
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || json.status !== 'success') throw new Error(json.error || 'Failed to load orders');
+        
+        const orders = json.data || [];
+        if (!orders.length) {
+            container.innerHTML = `<div style="text-align:center; padding: 2rem 0;">
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">You don't have any orders yet.</p>
+                <button class="btn btn-primary" onclick="showSection('market')">Browse Marketplace</button>
+            </div>`;
+            return;
+        }
+
+        let html = '<div style="display:grid; gap:1.25rem;">';
+        orders.forEach(o => {
+            const date = new Date(o.createdAt).toLocaleDateString();
+            const itemsHtml = (o.items || []).map(i => `<div style="font-size:0.9rem;">${esc(i.title)} x${i.quantity || 1}</div>`).join('');
+            const statusColor = o.paymentStatus === 'paid' ? '#10B981' : '#F59E0B';
+            
+            html += `
+            <div style="border: 1px solid var(--border-soft); border-radius: 12px; padding: 1.25rem; background: var(--bg-base);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+                    <span style="font-weight:700;">Order #${esc((o.id || '').slice(0, 8))}</span>
+                    <span style="color:${statusColor}; font-weight:600; font-size:0.9rem; padding:0.2rem 0.5rem; background:rgba(0,0,0,0.05); border-radius:4px;">${esc(o.paymentStatus || 'pending').toUpperCase()}</span>
+                </div>
+                <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1rem;">Date: ${date} <br>Delivery: ${esc(o.deliveryOptionLabel || '')}</div>
+                <div style="margin-bottom:1rem; border-left: 2px solid var(--border-soft); padding-left:0.75rem;">
+                    ${itemsHtml}
+                </div>
+                <div style="display:flex; justify-content:space-between; font-weight:700; border-top: 1px solid var(--border-soft); padding-top:0.75rem;">
+                    <span>Total</span>
+                    <span>₦${new Intl.NumberFormat().format(o.total)}</span>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+        
+    } catch (err) {
+        container.innerHTML = `<p style="text-align:center; color:#b91c1c; padding:2rem 0;">Error loading orders: ${esc(err.message)}</p>`;
+    }
+};
+
